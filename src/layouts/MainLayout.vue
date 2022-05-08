@@ -1,0 +1,108 @@
+<template>
+  <q-layout view="lHh Lpr lFf">
+    <q-header elevated>
+      <div class="q-pa-sm q-pl-md row items-center">
+        <div class="cursor-pointer non-selectable">
+          File
+          <q-menu :transition-duration="0" no-focus no-refocus>
+            <q-list dense style="min-width: 100px">
+              <q-item clickable v-close-popup>
+                <q-item-section>New</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup>
+                <q-item-section>Open...</q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable v-close-popup>
+                <q-item-section>Save</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup>
+                <q-item-section>Save as...</q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable>
+                <q-item-section>Preferences</q-item-section>
+                <q-item-section side>
+                  <q-icon name="keyboard_arrow_right" />
+                </q-item-section>
+
+                <q-menu
+                  anchor="top end"
+                  self="top start"
+                  :transition-duration="100"
+                  no-focus
+                  no-refocus
+                >
+                  <q-list>
+                    <q-item dense clickable>
+                      <q-item-section>Settings</q-item-section>
+                    </q-item>
+                    <q-item dense clickable>
+                      <q-item-section>Color Theme</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </div>
+
+        <div class="q-ml-md cursor-pointer non-selectable">
+          Edit
+          <q-menu auto-close :transition-duration="0" no-focus no-refocus>
+            <q-list dense style="min-width: 100px">
+              <q-item clickable>
+                <q-item-section @click="execCommand('undo')"
+                  >Undo</q-item-section
+                >
+              </q-item>
+              <q-item clickable>
+                <q-item-section @click="execCommand('redo')"
+                  >Redo</q-item-section
+                >
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable>
+                <q-item-section>Find</q-item-section>
+              </q-item>
+              <q-item clickable>
+                <q-item-section>Replace</q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable>
+                <q-item-section @click="execCommand('selectAll')"
+                  >Select All</q-item-section
+                >
+              </q-item>
+            </q-list>
+          </q-menu>
+        </div>
+      </div>
+    </q-header>
+
+    <q-page-container>
+      <router-view />
+    </q-page-container>
+  </q-layout>
+</template>
+
+<script>
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "MainLayout",
+  methods: {
+    execCommand(command) {
+      this.emitter.emit("execCommand", command);
+    },
+  },
+});
+</script>

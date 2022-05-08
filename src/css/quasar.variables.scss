@@ -1,0 +1,27 @@
+// Quasar SCSS (& Sass) Variables
+
+$primary: #f3f2f1;
+$secondary: #fff;
+$accent: #ed7112;
+
+$dark: #252525;
+$dark-page: #1d1d1d;
+
+$positive: #21ba45;
+$negative: #c10015;
+$info: #31ccec;
+$warning: #f2c037;
+
+:root {
+  --q-tetriary: #d5d3cc;
+  --q-color: #000;
+  --q-search-border: 1px solid var(--q-tetriary);
+}
+
+.body--dark {
+  --q-primary: #333333;
+  --q-secondary: #444444;
+  --q-tetriary: #656565;
+  --q-color: #fff; //c1c1c1
+  --q-search-border: 1px solid var(--q-primary);
+}

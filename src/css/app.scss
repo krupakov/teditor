@@ -1,0 +1,104 @@
+/* ===== Scrollbar ===== */
+/* Firefox */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #333333 #1d1d1d;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1d1d1d;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #333333;
+  border: none;
+}
+
+/* ===== Quasar ===== */
+.q-layout__shadow:after {
+  box-shadow: none !important;
+}
+
+.q-page-container {
+  padding-top: 37px !important;
+}
+
+.q-card {
+  background: var(--q-primary) !important;
+  border-radius: unset !important;
+  height: 100% !important;
+}
+
+.q-tab-panels {
+  height: 90% !important;
+  height: calc(100% - 37px) !important;
+}
+
+header {
+  color: var(--q-color) !important;
+}
+
+/* ===== CodeMirror ===== */
+.CodeMirror {
+  width: 100% !important;
+  cursor: text;
+}
+
+.CodeMirror-vscrollbar {
+  cursor: default !important;
+}
+
+.CodeMirror-wrap pre {
+  word-break: break-word;
+}
+
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+
+  margin: 0;
+  padding: 0px;
+
+  border: 1px solid #333333;
+  color: var(--q-color);
+
+  background: var(--q-primary);
+
+  font-size: 90%;
+  font-family: monospace;
+
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  white-space: pre;
+  cursor: pointer;
+  background: var(--q-primary);
+}
+
+.CodeMirror-matchingbracket {
+  text-decoration: none !important;
+  -webkit-box-shadow: inset 0px 0px 0px 1px #656565;
+  -moz-box-shadow: inset 0px 0px 0px 1px #656565;
+  box-shadow: inset 0px 0px 0px 1px #656565;
+}
+
+.CodeMirror-activeline-background {
+  background: #f0f0f0 !important;
+  background: rgba(101, 101, 101, 0.1) !important;
+}
+
+li.CodeMirror-hint-active {
+  background: #08f !important;
+  color: white;
+}
