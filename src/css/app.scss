@@ -43,6 +43,79 @@ header {
   color: var(--q-color) !important;
 }
 
+.header-row {
+  height: 37px;
+  padding: 0 !important;
+
+  svg {
+    margin: 0 10px;
+  }
+}
+
+.header-item {
+  display: flex;
+  align-items: center;
+  height: 37px;
+  padding: 0 10px;
+  margin: 0;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.q-menu {
+  border-radius: unset !important;
+}
+
+.q-focus-helper {
+  background: transparent !important;
+  transition: none !important;
+
+  &::before {
+    background: transparent !important;
+    transition: none !important;
+  }
+
+  &::after {
+    background: transparent !important;
+    transition: none !important;
+  }
+}
+
+.q-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  border-radius: 50%;
+  right: -12px;
+  font-size: 5px;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+
+  &::after {
+    content: "\2573";
+  }
+
+  &:hover {
+    background-color: var(--q-tetriary);
+  }
+}
+
+.q-tab {
+  width: 100px !important;
+  text-transform: unset !important;
+  overflow: hidden !important;
+
+  &:hover .q-tab__content {
+    .q-tab-close {
+      opacity: 1;
+    }
+  }
+}
+
 /* ===== CodeMirror ===== */
 .CodeMirror {
   width: 100% !important;

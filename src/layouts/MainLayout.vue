@@ -1,8 +1,11 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
-      <div class="q-pa-sm q-pl-md row items-center">
-        <div class="cursor-pointer non-selectable">
+      <div class="q-pa-sm q-pl-md row items-center header-row">
+        <svg width="20" height="20" viewBox="0 0 1200 1270" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M300 0.794922L0 174L300 347.205V274H500V1096.25H500.003L600 1269.45L699.997 1096.25H700L700 1096.24L700 274H900V347.205L1200 174L900 0.794922V74H300V0.794922Z" fill="#00CFB3"/>
+        </svg>
+        <div class="cursor-pointer non-selectable header-item">
           File
           <q-menu :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
@@ -51,7 +54,7 @@
           </q-menu>
         </div>
 
-        <div class="q-ml-md cursor-pointer non-selectable">
+        <div class="q-ml-md cursor-pointer non-selectable header-item">
           Edit
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">

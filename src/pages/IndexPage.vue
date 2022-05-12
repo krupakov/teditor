@@ -7,21 +7,23 @@
     /> -->
     <div class="q-pa-md" style="width: 100%; padding: 0 !important">
       <q-card>
-        <q-tabs v-model="tab" align="left" dense>
-          <q-tab name="tab1" label="Tab 1" :ripple="false" />
-          <q-tab name="tab2" label="Tab 2" :ripple="false" />
+        <q-tabs v-model="currentFile" align="left" dense>
+          <q-tab
+            v-for="(file, index) in files"
+            :key="'tab_' + index"
+            :name="index"
+            :label="file.name"
+            :ripple="false"
+          >
+            <div @click="closeFile(index)" class="q-tab-close"></div>
+          </q-tab>
         </q-tabs>
 
-        <q-tab-panels v-model="tab" keep-alive>
+        <q-tab-panels v-model="currentFile" keep-alive>
           <q-tab-panel
-            name="tab1"
-            style="padding: 0; height: calc(100vh - 75px)"
-          >
-            <code-editor></code-editor>
-          </q-tab-panel>
-
-          <q-tab-panel
-            name="tab2"
+            v-for="(file, index) in files"
+            :key="'panel_' + index"
+            :name="index"
             style="padding: 0; height: calc(100vh - 75px)"
           >
             <code-editor></code-editor>
@@ -43,8 +45,20 @@ export default defineComponent({
   },
   setup() {
     return {
-      tab: ref("tab1"),
+      files: [
+        { name: 'Tab 1', mode: 'text/javascript' },
+        { name: 'Tab 2', mode: 'text/javascript' },
+        { name: 'Tab 3', mode: 'text/javascript' },
+      ],
+      currentFile: ref(0),
     };
+  },
+  methods: {
+    closeFile(index) {
+      if (index > -1) {
+        this.files.splice(index, 1)
+      }
+    }
   },
 });
 </script>
