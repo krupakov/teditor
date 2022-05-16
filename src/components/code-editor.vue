@@ -48,6 +48,9 @@ import "codemirror/addon/comment/comment.js";
 // Active line highlighting
 import "codemirror/addon/selection/active-line.js";
 
+// Refresh window once
+import "codemirror/addon/display/autorefresh.js";
+
 export default defineComponent({
   name: "code-editor",
   watch: {
@@ -79,6 +82,7 @@ export default defineComponent({
       styleActiveLine: true,
       matchBrackets: true,
       autoCloseBrackets: true,
+      autoRefresh: true,
       tabSize: 2,
       gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       foldGutter: true,

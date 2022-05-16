@@ -28,19 +28,9 @@
   padding-top: 37px !important;
 }
 
-.q-card {
-  background: var(--q-primary) !important;
-  border-radius: unset !important;
-  height: 100% !important;
-}
-
-.q-tab-panels {
-  height: 90% !important;
-  height: calc(100% - 37px) !important;
-}
-
 header {
   color: var(--q-color) !important;
+  background-color: var(--q-secondary) !important;
 }
 
 .header-row {
@@ -58,7 +48,7 @@ header {
   height: 37px;
   padding: 0 10px;
   margin: 0;
-  
+
   &:hover {
     background: rgba(0, 0, 0, 0.1);
   }
@@ -68,32 +58,61 @@ header {
   border-radius: unset !important;
 }
 
-.q-focus-helper {
-  background: transparent !important;
-  transition: none !important;
+.tabs {
+  background-color: var(--q-primary);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
-  &::before {
-    background: transparent !important;
-    transition: none !important;
+.tab {
+  cursor: pointer;
+  height: 37px;
+  width: 100px;
+
+  input {
+    background: transparent;
+    width: 100%;
+    border: none;
+    outline: none;
+    color: var(--q-color);
+    padding: 10px 8px 6px 8px;
+
+    &:disabled {
+      cursor: pointer !important;
+      width: calc(100% - 20px) !important;
+      opacity: 1 !important;
+    }
+
+    &:focus {
+      -webkit-box-shadow: inset 0px 0px 0px 1px var(--q-accent);
+      -moz-box-shadow: inset 0px 0px 0px 1px var(--q-accent);
+      box-shadow: inset 0px 0px 0px 1px var(--q-accent);
+    }
   }
 
-  &::after {
-    background: transparent !important;
-    transition: none !important;
+  &:hover .tab-close {
+    display: inline-flex;
+  }
+
+  &:hover input:not(:disabled) + .tab-close {
+    display: none !important;
   }
 }
 
-.q-tab-close {
-  display: flex;
+.tab-close {
+  display: none;
   align-items: center;
   justify-content: center;
-  position: absolute;
+  position: relative;
   border-radius: 50%;
-  right: -12px;
-  font-size: 5px;
-  width: 12px;
-  height: 12px;
-  opacity: 0;
+  top: -2px;
+  font-size: 7px;
+  width: 14px;
+  height: 14px;
 
   &::after {
     content: "\2573";
@@ -104,20 +123,38 @@ header {
   }
 }
 
-.q-tab {
-  width: 100px !important;
-  text-transform: unset !important;
-  overflow: hidden !important;
+.tab-add {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  height: 37px;
+  width: 37px;
+  font-size: 12px;
 
-  &:hover .q-tab__content {
-    .q-tab-close {
-      opacity: 1;
-    }
+  &::after {
+    content: "\2547";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--q-secondary);
+    border-radius: 50%;
+    height: 24px;
+    width: 24px;
   }
+
+  &:hover::after {
+    background-color: var(--q-tetriary);
+  }
+}
+
+.tab-content {
+  height: calc(100vh - 75px);
 }
 
 /* ===== CodeMirror ===== */
 .CodeMirror {
+  min-height: calc(100vh - 75px);
   width: 100% !important;
   cursor: text;
 }
