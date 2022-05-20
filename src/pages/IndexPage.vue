@@ -10,24 +10,26 @@
         <div
           class="tab"
           :style="{
-            background: key == currentWindow ? activeTabStyles.background : '',
+            background: key == currentTab ? activeTabStyles.background : '',
           }"
-          v-for="(file, key, index) in files"
+          v-for="(document, key, index) in documents"
           :key="key"
-          @click="tabClickHandler($event, key, index, file.name)"
+          @click="
+            tabClickHandler($event, key, index, document.name, !!document.value)
+          "
         >
           <input
             :style="{
-              color: key == currentWindow ? activeTabStyles.color : '',
+              color: key == currentTab ? activeTabStyles.color : '',
             }"
             type="text"
             autocomplete="off"
-            :value="file.name"
+            :value="document.name"
             disabled
           />
           <div
             :style="{
-              color: key == currentWindow ? activeTabStyles.color : '',
+              color: key == currentTab ? activeTabStyles.color : '',
             }"
             class="tab-close"
             :ref="'close_' + key"
@@ -35,7 +37,7 @@
         </div>
         <div
           class="tab-add"
-          v-if="Object.keys(files).length"
+          v-if="Object.keys(documents).length"
           @click="newTab()"
         ></div>
       </div>
@@ -48,11 +50,16 @@
       >
         <div
           class="tab-content col"
-          v-for="(file, key) in files"
-          :key="'window_' + key"
-          v-show="key == currentWindow"
+          v-for="(document, key) in documents"
+          :key="'tab_' + key"
+          v-show="key == currentTab"
         >
-          <code-editor :ref="'editor_' + key"></code-editor>
+          <code-editor
+            :ref="'editor_' + key"
+            :documentKey="key"
+            :mode="document.mode"
+            v-model:value="document.value"
+          ></code-editor>
         </div>
       </div>
     </div>
@@ -71,8 +78,8 @@ export default defineComponent({
   },
   setup() {
     return {
-      files: ref({}),
-      currentWindow: ref(""),
+      documents: ref({}),
+      currentTab: ref(""),
       activeTabStyles: ref({
         background: "",
         color: "",
@@ -83,6 +90,9 @@ export default defineComponent({
   mounted() {
     this.emitter.on("newTab", () => {
       this.newTab();
+    });
+    this.emitter.on("setDocumentValue", (data) => {
+      this.setDocumentValue(data.key, data.value);
     });
 
     this.getTabStyles();
@@ -115,38 +125,51 @@ export default defineComponent({
     newTab() {
       let newKey = (Math.random() + 1).toString(36).substring(2);
 
-      this.files[newKey] = {
+      this.documents[newKey] = {
         name: "Undefined",
-        mode: "text/javascript",
+        mode: "", // text/x-java text/javascript text/x-c++src text/x-csharp
+        value: "",
       };
-      this.currentWindow = newKey;
+      this.currentTab = newKey;
     },
-    tabClickHandler(event, key, index, filename) {
+    closeTab(key, index) {
+      let newCurrent = this.currentTab,
+        keys = Object.keys(this.documents);
+
+      delete this.documents[key];
+
+      if (this.currentTab == key) {
+        newCurrent = keys[index - 1] || keys[index + 1] || "";
+      }
+
+      this.currentTab = "";
+      this.currentTab = newCurrent;
+    },
+    tabClickHandler(event, key, index, name, isEdited) {
       if (event.target == this.$refs["close_" + key][0]) {
+        if (!isEdited) {
+          this.closeTab(key, index);
+          return;
+        }
+
+        this.currentTab = key;
         this.$q
           .dialog({
             component: ConfirmDialog,
             componentProps: {
-              title: "Close - " + filename,
+              title: "Close - " + name,
               message: "Your changes will be lost. Continue?",
             },
           })
           .onOk(() => {
-            let newCurrent = this.currentWindow,
-              keys = Object.keys(this.files);
-
-            delete this.files[key];
-
-            if (this.currentWindow == key) {
-              newCurrent = keys[index - 1] || keys[index + 1] || "";
-            }
-
-            this.currentWindow = "";
-            this.currentWindow = newCurrent;
+            this.closeTab(key, index);
           });
       } else {
-        this.currentWindow = key;
+        this.currentTab = key;
       }
+    },
+    setDocumentValue(key, value) {
+      this.documents[key].value = value;
     },
   },
 });
