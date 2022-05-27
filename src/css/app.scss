@@ -58,6 +58,16 @@ header {
   border-radius: unset !important;
 }
 
+.greeting {
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    margin-bottom: 20px;
+  }
+}
+
 .tabs {
   background-color: var(--q-primary);
   -webkit-touch-callout: none;
@@ -149,7 +159,79 @@ header {
 }
 
 .tab-content {
+  position: relative;
   height: calc(100vh - 75px);
+}
+
+.side-panel {
+  background-color: var(--q-primary);
+  box-shadow: var(--q-primary) 0 10px 0;
+  border: 1px solid var(--q-secondary);
+
+  .close {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--q-secondary);
+    color: var(--q-color);
+    border-radius: 0 0 0 3px;
+    cursor: pointer;
+    float: right;
+    font-size: 14px;
+    height: 24px;
+    width: 36px;
+
+    &:hover {
+      background-color: var(--q-negative);
+    }
+  }
+
+  .side-panel-row {
+    margin-top: 36px;
+    padding: 0 10px;
+
+    input {
+      height: 40px;
+      width: calc(100% - 41px);
+      background-color: var(--q-secondary);
+      color: var(--q-color);
+      padding: 0 10px;
+      border-radius: 3px 0 0 3px;
+      border: 0 none;
+      opacity: 1 !important;
+      cursor: text !important;
+    }
+
+    .q-btn {
+      height: 40px;
+      width: 40px;
+      background-color: var(--q-secondary);
+      border-left: var(--q-search-border);
+      border-radius: 0 3px 3px 0;
+      cursor: pointer;
+    }
+
+    .peers-count {
+      display: flex;
+      align-items: center;
+      height: 20px;
+      width: 100%;
+      margin-top: 10px;
+      padding: 0 5px;
+
+      .led {
+        height: 8px;
+        width: 8px;
+        background-color: var(--q-negative);
+        box-shadow: 0 0 5px var(--q-negative);
+        border-radius: 50%;
+      }
+
+      .counter {
+        padding-left: 10px;
+      }
+    }
+  }
 }
 
 /* ===== CodeMirror ===== */

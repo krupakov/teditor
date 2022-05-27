@@ -16,7 +16,7 @@
 
   &.right {
     border-radius: 3px;
-    top: 42px;
+    top: 5px;
     right: 15px;
   }
 }
@@ -170,12 +170,7 @@
 }
 
 .cm-searching {
-  background-color: transparent !important;
-  -webkit-box-shadow: inset 0px 0px 0px 1px #f4a971;
-  -webkit-box-shadow: inset 0px 0px 0px 1px rgba(237, 112, 18, 0.6);
-  -moz-box-shadow: inset 0px 0px 0px 1px #f4a971;
-  -moz-box-shadow: inset 0px 0px 0px 1px rgba(237, 112, 18, 0.6);
-  box-shadow: inset 0px 0px 0px 1px #f4a971;
-  box-shadow: inset 0px 0px 0px 1px rgba(237, 112, 18, 0.6);
+  background-color: #00a79180 !important;
+  background-color: rgba(0, 167, 145, 0.5) !important;
   padding: 2px 0;
 }

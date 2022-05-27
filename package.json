@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "automerge": "^1.0.1-preview.7",
     "axios": "^0.21.1",
     "codemirror": "5.65.3",
     "codemirror-search-replace": "1.0.6",

@@ -48,15 +48,11 @@ import "codemirror/addon/comment/comment.js";
 /** Line highlighting */
 import "codemirror/addon/selection/active-line.js";
 
-/** Refresh tab on load */
-import "codemirror/addon/display/autorefresh.js";
-
 export default defineComponent({
   name: "code-editor",
   props: {
     documentKey: String,
-    mode: String,
-    value: String,
+    value: Array,
   },
   watch: {
     /** Watch window resize (to calculate editors height) */
@@ -66,22 +62,22 @@ export default defineComponent({
         document.querySelector(".CodeMirror").parentElement.clientHeight
       );
     },
-    /** Watch document content prop for update */
-    value: function () {
-      if (this.value == this.cm.getValue()) {
-        return;
-      }
-
-      const cursor = this.cm.getCursor();
-      this.cm.setValue(this.value);
-      this.cm.setCursor(cursor);
-    },
   },
   methods: {
     /** Codemirror command caller */
     execCommand(command) {
       this.cm.execCommand(command);
       this.cm.focus();
+    },
+    updateValue(value) {
+      const cursor = this.cm.getCursor();
+      this.cm.replaceRange(
+        value.join("\n"),
+        { line: 0, ch: 0 },
+        { line: this.cm.lastLine() + 1, ch: 0 },
+        "automerge"
+      );
+      this.cm.setCursor(cursor);
     },
   },
   setup() {
@@ -94,13 +90,12 @@ export default defineComponent({
     /** Init Codemirror instance */
     this.cm = CodeMirror.fromTextArea(this.$refs.editor, {
       theme: "monokai",
-      mode: this.mode || "text/javascript",
+      mode: "text/javascript", // text/x-java text/javascript text/x-c++src text/x-csharp
       lineNumbers: true,
       lineWrapping: true,
       styleActiveLine: true,
       matchBrackets: true,
       autoCloseBrackets: true,
-      autoRefresh: true,
       tabSize: 2,
       gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       foldGutter: true,
@@ -109,19 +104,11 @@ export default defineComponent({
         "Ctrl-/": "toggleComment",
       },
     });
-    this.cm.setValue(this.value);
+    this.cm.setValue(this.value.join("\n"));
 
     /** Clear history on load */
     this.cm.doc.clearHistory();
     this.cm.refresh();
-
-    /** Updating document content prop */
-    this.cm.on("change", (cm) => {
-      this.emitter.emit("setDocumentValue", {
-        key: this.documentKey,
-        value: cm.getValue(),
-      });
-    });
 
     /** Enable hints on user input */
     this.cm.on("inputRead", function (cm) {
@@ -137,18 +124,38 @@ export default defineComponent({
       }
     });
 
+    /** Make changes to Automerge */
+    this.cm.on("changes", (cm, changes) => {
+      this.emitter.emit("handleChanges", {
+        key: this.documentKey,
+        changes: changes,
+      });
+    });
+
     /** Handle event call from other components */
-    this.emitter.on("execCommand", (command) => {
+    this.emitter.on("execCommand" + this.documentKey, (command) => {
       this.execCommand(command);
     });
 
-    /** Setting fixed size for the editor */
+    /** Refresh on call */
+    this.emitter.on("refresh" + this.documentKey, () => {
+      setTimeout(() => {
+        this.cm.refresh();
+      }, 1);
+    });
+
+    /** Update editor content on call */
+    this.emitter.on("updateValue" + this.documentKey, (value) => {
+      this.updateValue(value);
+    });
+
+    /** Set fixed size for the editor */
     this.cm.setSize(
       null,
       document.querySelector(".CodeMirror").parentElement.clientHeight
     );
 
-    /** Asking user to confirm before leaving the page */
+    /** Ask user to confirm before leaving the page */
     window.onbeforeunload = function () {
       return false;
     };

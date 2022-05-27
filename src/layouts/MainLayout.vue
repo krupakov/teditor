@@ -22,16 +22,20 @@
                 <q-item-section @click="emit('newTab')">New</q-item-section>
               </q-item>
               <q-item clickable v-close-popup>
-                <q-item-section>Open...</q-item-section>
+                <q-item-section @click="openFile()">Open...</q-item-section>
+                <input
+                  id="openFile"
+                  name="openFile"
+                  type="file"
+                  @change="onChooseFile"
+                  style="display: none"
+                />
               </q-item>
 
               <q-separator />
 
               <q-item clickable v-close-popup>
-                <q-item-section>Save</q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup>
-                <q-item-section>Save as...</q-item-section>
+                <q-item-section @click="saveFile()">Save</q-item-section>
               </q-item>
 
               <q-separator />
@@ -61,10 +65,9 @@
               <q-separator />
 
               <q-item clickable>
-                <q-item-section>Find</q-item-section>
-              </q-item>
-              <q-item clickable>
-                <q-item-section>Replace</q-item-section>
+                <q-item-section @click="execCommand('find')"
+                  >Find</q-item-section
+                >
               </q-item>
 
               <q-separator />
@@ -82,8 +85,10 @@
           View
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
-              <q-item clickable v-close-popup>
-                <q-item-section>P2P Connection</q-item-section>
+              <q-item clickable>
+                <q-item-section @click="emit('sidePanel')"
+                  >P2P Connection</q-item-section
+                >
               </q-item>
             </q-list>
           </q-menu>
@@ -98,16 +103,41 @@
 </template>
 
 <script>
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 
 export default defineComponent({
   name: "MainLayout",
+  setup() {
+    return {
+      file: ref(),
+    };
+  },
   methods: {
     execCommand(command) {
       this.emitter.emit("execCommand", command);
     },
     emit(method) {
       this.emitter.emit(method);
+    },
+    onChooseFile(event) {
+      let input = event.target;
+      if (!input.files[0]) {
+        return;
+      }
+      let fr = new FileReader();
+      fr.onload = (event) => {
+        this.emitter.emit("newTab", {
+          name: input.files[0].name,
+          value: event.target.result.replace(/[\r]/g, "").split("\n"),
+        });
+      };
+      fr.readAsText(input.files[0]);
+    },
+    openFile() {
+      document.getElementById("openFile").click();
+    },
+    saveFile() {
+      this.emitter.emit("saveFile");
     },
   },
 });

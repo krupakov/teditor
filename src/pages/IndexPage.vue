@@ -1,11 +1,30 @@
 <template>
   <q-page class="flex">
-    <!-- <img
-      alt="Quasar logo"
-      src="~assets/quasar-logo-vertical.svg"
-      style="width: 200px; height: 200px"
-    /> -->
     <div class="q-pa-md" style="width: 100%; padding: 0 !important">
+      <div
+        class="greeting column"
+        v-if="!Object.keys(documents).length && !this.$q.loading.isActive"
+      >
+        <svg
+          width="200"
+          height="200"
+          viewBox="0 0 1200 1270"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M300 0.794922L0 174L300 347.205V274H500V1096.25H500.003L600 1269.45L699.997 1096.25H700L700 1096.24L700 274H900V347.205L1200 174L900 0.794922V74H300V0.794922Z"
+            fill="#00CFB3"
+          />
+        </svg>
+        <q-btn
+          color="accent"
+          icon="note_add"
+          label="New File"
+          @click="newTab()"
+        />
+      </div>
+
       <div class="tabs row no-wrap">
         <div
           class="tab"
@@ -14,9 +33,7 @@
           }"
           v-for="(document, key, index) in documents"
           :key="key"
-          @click="
-            tabClickHandler($event, key, index, document.name, !!document.value)
-          "
+          @click="tabClickHandler($event, key, index, document.name)"
         >
           <input
             :style="{
@@ -57,9 +74,43 @@
           <code-editor
             :ref="'editor_' + key"
             :documentKey="key"
-            :mode="document.mode"
-            v-model:value="document.value"
+            :value="automerge[key].value"
           ></code-editor>
+        </div>
+        <div
+          class="side-panel col-3 order-last"
+          v-if="sidePanel && Object.keys(documents).length"
+        >
+          <div class="close" @click="sidePanel = !sidePanel">
+            <i
+              class="q-icon notranslate material-icons"
+              aria-hidden="true"
+              role="presentation"
+              >close</i
+            >
+          </div>
+          <div class="row side-panel-row">
+            <input type="text" :value="connectUrl + peerId" disabled />
+            <q-btn flat color="color" icon="content_copy" @click="copyLink" />
+            <div class="peers-count">
+              <div
+                class="led"
+                :style="{
+                  'background-color':
+                    Object.keys(connectedPeers).length == 0
+                      ? 'var(--q-negative)'
+                      : 'var(--q-positive)',
+                  'box-shadow':
+                    Object.keys(connectedPeers).length == 0
+                      ? '0 0 5px var(--q-negative)'
+                      : '0 0 5px var(--q-positive)',
+                }"
+              ></div>
+              <span class="counter"
+                >{{ Object.keys(connectedPeers).length }} Active Peers</span
+              >
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -69,7 +120,8 @@
 <script>
 import { defineComponent, ref } from "vue";
 import CodeEditor from "components/code-editor";
-import ConfirmDialog from "components/confirm-dialog";
+import ShowDialog from "components/show-dialog";
+import * as Automerge from "automerge";
 
 export default defineComponent({
   name: "IndexPage",
@@ -78,6 +130,7 @@ export default defineComponent({
   },
   setup() {
     return {
+      automerge: Automerge.init(),
       documents: ref({}),
       currentTab: ref(""),
       activeTabStyles: ref({
@@ -85,17 +138,139 @@ export default defineComponent({
         color: "",
         shadow: "",
       }),
+      sidePanel: ref(true),
+      peerId: ref(""),
+      connectUrl: ref(""),
+      connectedPeers: ref({}),
     };
   },
   mounted() {
-    this.emitter.on("newTab", () => {
-      this.newTab();
+    this.connectUrl = window.location.host + "/?connect=";
+
+    /** Event bus handlers */
+    this.emitter.on("newTab", (data) => {
+      if (data) {
+        this.newTab(data.name, data.value);
+      } else {
+        this.newTab();
+      }
     });
-    this.emitter.on("setDocumentValue", (data) => {
-      this.setDocumentValue(data.key, data.value);
+    this.emitter.on("sidePanel", () => {
+      this.sidePanel = !this.sidePanel;
+    });
+    this.emitter.on("handleChanges", (data) => {
+      this.handleChanges(data.key, data.changes);
+    });
+    this.emitter.on("execCommand", (command) => {
+      this.emitter.emit("execCommand" + this.currentTab, command);
+    });
+    this.emitter.on("saveFile", () => {
+      this.saveFile();
     });
 
     this.getTabStyles();
+
+    /** PeerJs */
+    this.peer.on("open", (id) => {
+      this.peerId = id;
+
+      /** Connect peers on load */
+      if (this.$route.query.hasOwnProperty("connect")) {
+        this.connect();
+      }
+    });
+
+    this.peer.on("connection", (connection) => {
+      connection.on("open", () => {
+        /** Send object snapshot */
+        const automergeChanges = Automerge.getChanges(
+          Automerge.init(),
+          this.automerge
+        );
+        let changes = [];
+        for (let i = 0; i < automergeChanges.length; i++) {
+          changes.push(automergeChanges[i].toString());
+        }
+        connection.send(changes);
+
+        this.connectedPeers[connection.peer] = connection;
+
+        connection.on("data", (data) => {
+          /** Build Uint8Array from string */
+          let changes = [];
+          for (let i = 0; i < data.length; i++) {
+            changes.push(
+              Uint8Array.from(
+                data[i].replace("[", "").replace("]", "").split(",")
+              )
+            );
+          }
+
+          /** Apply changes to automerge */
+          let patch;
+          [this.automerge, patch] = Automerge.applyChanges(
+            this.automerge,
+            changes
+          );
+
+          /** Apply changes to reactive object */
+          let newDocuments = {};
+          Object.keys(this.automerge).forEach((i) => {
+            newDocuments[i] = {
+              name: this.automerge[i].name,
+            };
+          });
+          this.documents = newDocuments;
+
+          /** Update editor content */
+          Object.keys(this.automerge).forEach((i) => {
+            this.emitter.emit("updateValue" + i, this.automerge[i].value);
+          });
+
+          /** Set new active tab */
+          if (!this.documents.hasOwnProperty(this.currentTab)) {
+            this.currentTab = Object.keys(this.documents)[0];
+          }
+
+          /** Broadcast change to other peers */
+          this.broadcast(data, connection.peer);
+        });
+      });
+      connection.on("close", () => {
+        delete this.connectedPeers[connection.peer];
+      });
+    });
+
+    this.peer.on("disconnected", () => {
+      this.peer.reconnect();
+      setTimeout(() => {
+        if (this.peer.disconnected) {
+          this.$q.dialog({
+            component: ShowDialog,
+            componentProps: {
+              title: "Error",
+              message:
+                "You have disconnected from the connection broker. Existing connections will not be closed, but any new connections cannot be established.",
+              cancelBtn: false,
+            },
+          });
+        }
+      }, 5000);
+    });
+
+    this.peer.on("error", (err) => {
+      if (err.type == "peer-unavailable" || err.type == "server-error") {
+        this.$q.loading.hide();
+        this.$q.dialog({
+          component: ShowDialog,
+          componentProps: {
+            title: "Error",
+            message: "Unable to connect to peer",
+            cancelBtn: false,
+          },
+        });
+      }
+    });
   },
   methods: {
     getTabStyles() {
@@ -122,21 +297,46 @@ export default defineComponent({
             .match(/rgb\(.*\)/gi)[0];
       });
     },
-    newTab() {
+    copyLink() {
+      const clipboardData = window.clipboardData || navigator.clipboard;
+
+      clipboardData.writeText(this.connectUrl + this.peerId);
+    },
+    newTab(name = "Undefined", value = [""]) {
       let newKey = (Math.random() + 1).toString(36).substring(2);
 
+      /** Make change */
+      this.automerge = Automerge.change(this.automerge, "newTab", (docs) => {
+        docs[newKey] = {
+          name: name,
+          value: value,
+        };
+      });
+
       this.documents[newKey] = {
-        name: "Undefined",
-        mode: "", // text/x-java text/javascript text/x-c++src text/x-csharp
-        value: "",
+        name: name,
       };
+
+      /** Broadcast change */
+      let change = Automerge.getLastLocalChange(this.automerge);
+      this.broadcast([change.toString()]);
+
       this.currentTab = newKey;
     },
     closeTab(key, index) {
       let newCurrent = this.currentTab,
         keys = Object.keys(this.documents);
 
+      /** Make change */
+      this.automerge = Automerge.change(this.automerge, "closeTab", (docs) => {
+        delete docs[key];
+      });
+
       delete this.documents[key];
+
+      /** Broadcast change */
+      let change = Automerge.getLastLocalChange(this.automerge);
+      this.broadcast([change.toString()]);
 
       if (this.currentTab == key) {
         newCurrent = keys[index - 1] || keys[index + 1] || "";
@@ -145,9 +345,12 @@ export default defineComponent({
       this.currentTab = "";
       this.currentTab = newCurrent;
     },
-    tabClickHandler(event, key, index, name, isEdited) {
+    tabClickHandler(event, key, index, name) {
       if (event.target == this.$refs["close_" + key][0]) {
-        if (!isEdited) {
+        if (
+          this.automerge[key].value.length == 1 &&
+          this.automerge[key].value[0] == ""
+        ) {
           this.closeTab(key, index);
           return;
         }
@@ -155,7 +358,7 @@ export default defineComponent({
         this.currentTab = key;
         this.$q
           .dialog({
-            component: ConfirmDialog,
+            component: ShowDialog,
             componentProps: {
               title: "Close - " + name,
               message: "Your changes will be lost. Continue?",
@@ -167,9 +370,185 @@ export default defineComponent({
       } else {
         this.currentTab = key;
       }
+      this.emitter.emit("refresh" + key);
     },
-    setDocumentValue(key, value) {
-      this.documents[key].value = value;
+    /** Make changes to Automerge */
+    handleChanges(key, changes) {
+      Object.keys(changes).forEach((i) => {
+        if (changes[i].origin == "automerge") {
+          return;
+        }
+
+        /** Make change */
+        this.automerge = Automerge.change(this.automerge, "changes", (docs) => {
+          if (changes[i].from.line == changes[i].to.line) {
+            let firstLine = docs[key].value[changes[i].from.line],
+              lastLine = [];
+
+            if (
+              changes[i].text.length > 1 &&
+              changes[i].to.ch <= docs[key].value[changes[i].to.line].length - 1
+            ) {
+              lastLine.push(
+                changes[i].text[changes[i].text.length - 1] +
+                  docs[key].value[changes[i].to.line].slice(changes[i].to.ch)
+              );
+              firstLine =
+                firstLine.slice(0, changes[i].from.ch) + changes[i].text[0];
+            } else {
+              firstLine =
+                firstLine.slice(0, changes[i].from.ch) +
+                changes[i].text[0] +
+                firstLine.slice(changes[i].to.ch);
+            }
+
+            docs[key].value.splice(
+              changes[i].from.line,
+              1,
+              firstLine,
+              ...changes[i].text.slice(
+                1,
+                lastLine.length == 0
+                  ? changes[i].text.length
+                  : changes[i].text.length - 1
+              ),
+              ...lastLine
+            );
+          } else {
+            let firstLine =
+                docs[key].value[changes[i].from.line].slice(
+                  0,
+                  changes[i].from.ch
+                ) + changes[i].text[0],
+              lastLine = [];
+
+            if (changes[i].text.length == 1) {
+              firstLine += docs[key].value[changes[i].to.line].slice(
+                changes[i].removed[changes[i].removed.length - 1].length
+              );
+            } else {
+              lastLine.push(
+                changes[i].text[changes[i].text.length - 1] +
+                  docs[key].value[changes[i].to.line].slice(changes[i].to.ch)
+              );
+            }
+
+            docs[key].value.splice(
+              changes[i].from.line,
+              changes[i].to.line - changes[i].from.line + 1,
+              firstLine,
+              ...changes[i].text.slice(1, changes[i].text.length - 1),
+              ...lastLine
+            );
+          }
+        });
+
+        /** Broadcast change */
+        let change = Automerge.getLastLocalChange(this.automerge);
+        this.broadcast([change.toString()]);
+
+        /** Apply changes to reactive object */
+        let newDocuments = {};
+        Object.keys(this.automerge).forEach((i) => {
+          newDocuments[i] = {
+            name: this.automerge[i].name,
+          };
+        });
+        this.documents = newDocuments;
+      });
+    },
+    /** Save file */
+    saveFile() {
+      if (
+        this.automerge[this.currentTab].value.length == 1 &&
+        this.automerge[this.currentTab].value[0] == ""
+      ) {
+        return;
+      }
+
+      let pom = document.createElement("a");
+      pom.setAttribute(
+        "href",
+        "data:text/plain;charset=utf-8," +
+          encodeURIComponent(this.automerge[this.currentTab].value.join("\n"))
+      );
+      pom.setAttribute("download", this.automerge[this.currentTab].name);
+
+      if (document.createEvent) {
+        let event = document.createEvent("MouseEvents");
+        event.initEvent("click", true, true);
+        pom.dispatchEvent(event);
+      } else {
+        pom.click();
+      }
+    },
+    /** Connect to peer */
+    connect() {
+      let connection = this.peer.connect(this.$route.query.connect);
+
+      this.sidePanel = false;
+
+      this.$q.loading.show({
+        message: "Connecting to peer...",
+      });
+
+      connection.on("open", () => {
+        this.$q.loading.hide();
+        this.connectedPeers[connection.peer] = connection;
+
+        connection.on("data", (data) => {
+          /** Build Uint8Array from string */
+          let changes = [];
+          for (let i = 0; i < data.length; i++) {
+            changes.push(
+              Uint8Array.from(
+                data[i].replace("[", "").replace("]", "").split(",")
+              )
+            );
+          }
+
+          /** Apply changes to automerge */
+          let patch;
+          [this.automerge, patch] = Automerge.applyChanges(
+            this.automerge,
+            changes
+          );
+
+          /** Apply changes to reactive object */
+          let newDocuments = {};
+          Object.keys(this.automerge).forEach((i) => {
+            newDocuments[i] = {
+              name: this.automerge[i].name,
+            };
+          });
+          this.documents = newDocuments;
+
+          /** Update editor content */
+          Object.keys(this.automerge).forEach((i) => {
+            this.emitter.emit("updateValue" + i, this.automerge[i].value);
+          });
+
+          /** Set new active tab */
+          if (!this.documents.hasOwnProperty(this.currentTab)) {
+            this.currentTab = Object.keys(this.documents)[0];
+          }
+
+          /** Broadcast change to other peers */
+          this.broadcast(data, connection.peer);
+        });
+      });
+      connection.on("close", () => {
+        this.$q.loading.hide();
+        delete this.connectedPeers[connection.peer];
+      });
+    },
+    /** Send changes */
+    broadcast(changes, exclude = "") {
+      Object.keys(this.connectedPeers).forEach((i) => {
+        if (i != exclude) {
+          this.connectedPeers[i].send(changes);
+        }
+      });
     },
   },
 });
