@@ -128,7 +128,7 @@ export default defineComponent({
       fr.onload = (event) => {
         this.emitter.emit("newTab", {
           name: input.files[0].name,
-          value: event.target.result.replace(/[\r]/g, "").split("\n"),
+          value: event.target.result.replace(/[\r]/g, ""),
         });
       };
       fr.readAsText(input.files[0]);

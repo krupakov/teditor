@@ -159,7 +159,7 @@ export default defineComponent({
       this.sidePanel = !this.sidePanel;
     });
     this.emitter.on("handleChanges", (data) => {
-      this.handleChanges(data.key, data.changes);
+      this.handleChanges(data);
     });
     this.emitter.on("execCommand", (command) => {
       this.emitter.emit("execCommand" + this.currentTab, command);
@@ -183,13 +183,14 @@ export default defineComponent({
     this.peer.on("connection", (connection) => {
       connection.on("open", () => {
         /** Send object snapshot */
+        let changes = [];
         const automergeChanges = Automerge.getChanges(
           Automerge.init(),
           this.automerge
         );
-        let changes = [];
-        for (let i = 0; i < automergeChanges.length; i++) {
-          changes.push(automergeChanges[i].toString());
+
+        for (const change of automergeChanges) {
+          changes.push(change.toString());
         }
         connection.send(changes);
 
@@ -197,11 +198,11 @@ export default defineComponent({
 
         connection.on("data", (data) => {
           /** Build Uint8Array from string */
-          let changes = [];
-          for (let i = 0; i < data.length; i++) {
+          changes = [];
+          for (const change of data) {
             changes.push(
               Uint8Array.from(
-                data[i].replace("[", "").replace("]", "").split(",")
+                change.replace("[", "").replace("]", "").split(",")
               )
             );
           }
@@ -302,7 +303,7 @@ export default defineComponent({
 
       clipboardData.writeText(this.connectUrl + this.peerId);
     },
-    newTab(name = "Undefined", value = [""]) {
+    newTab(name = "Undefined", value = "") {
       let newKey = (Math.random() + 1).toString(36).substring(2);
 
       /** Make change */
@@ -347,10 +348,7 @@ export default defineComponent({
     },
     tabClickHandler(event, key, index, name) {
       if (event.target == this.$refs["close_" + key][0]) {
-        if (
-          this.automerge[key].value.length == 1 &&
-          this.automerge[key].value[0] == ""
-        ) {
+        if (!this.automerge[key].value.length) {
           this.closeTab(key, index);
           return;
         }
@@ -373,104 +371,39 @@ export default defineComponent({
       this.emitter.emit("refresh" + key);
     },
     /** Make changes to Automerge */
-    handleChanges(key, changes) {
-      Object.keys(changes).forEach((i) => {
-        if (changes[i].origin == "automerge") {
-          return;
-        }
+    handleChanges(data) {
+      if (data.origin == "automerge") return;
 
-        /** Make change */
-        this.automerge = Automerge.change(this.automerge, "changes", (docs) => {
-          if (changes[i].from.line == changes[i].to.line) {
-            let firstLine = docs[key].value[changes[i].from.line],
-              lastLine = [];
-
-            if (
-              changes[i].text.length > 1 &&
-              changes[i].to.ch <= docs[key].value[changes[i].to.line].length - 1
-            ) {
-              lastLine.push(
-                changes[i].text[changes[i].text.length - 1] +
-                  docs[key].value[changes[i].to.line].slice(changes[i].to.ch)
-              );
-              firstLine =
-                firstLine.slice(0, changes[i].from.ch) + changes[i].text[0];
-            } else {
-              firstLine =
-                firstLine.slice(0, changes[i].from.ch) +
-                changes[i].text[0] +
-                firstLine.slice(changes[i].to.ch);
-            }
-
-            docs[key].value.splice(
-              changes[i].from.line,
-              1,
-              firstLine,
-              ...changes[i].text.slice(
-                1,
-                lastLine.length == 0
-                  ? changes[i].text.length
-                  : changes[i].text.length - 1
-              ),
-              ...lastLine
-            );
-          } else {
-            let firstLine =
-                docs[key].value[changes[i].from.line].slice(
-                  0,
-                  changes[i].from.ch
-                ) + changes[i].text[0],
-              lastLine = [];
-
-            if (changes[i].text.length == 1) {
-              firstLine += docs[key].value[changes[i].to.line].slice(
-                changes[i].removed[changes[i].removed.length - 1].length
-              );
-            } else {
-              lastLine.push(
-                changes[i].text[changes[i].text.length - 1] +
-                  docs[key].value[changes[i].to.line].slice(changes[i].to.ch)
-              );
-            }
-
-            docs[key].value.splice(
-              changes[i].from.line,
-              changes[i].to.line - changes[i].from.line + 1,
-              firstLine,
-              ...changes[i].text.slice(1, changes[i].text.length - 1),
-              ...lastLine
-            );
-          }
-        });
-
-        /** Broadcast change */
-        let change = Automerge.getLastLocalChange(this.automerge);
-        this.broadcast([change.toString()]);
-
-        /** Apply changes to reactive object */
-        let newDocuments = {};
-        Object.keys(this.automerge).forEach((i) => {
-          newDocuments[i] = {
-            name: this.automerge[i].name,
-          };
-        });
-        this.documents = newDocuments;
+      /** Make change */
+      this.automerge = Automerge.change(this.automerge, "changes", (docs) => {
+        docs[data.key].value =
+          docs[data.key].value.slice(0, data.stIndex) +
+          data.text +
+          docs[data.key].value.slice(data.stIndex + data.delta);
       });
+
+      /** Broadcast change */
+      let change = Automerge.getLastLocalChange(this.automerge);
+      this.broadcast([change.toString()]);
+
+      /** Apply changes to reactive object */
+      let newDocuments = {};
+      Object.keys(this.automerge).forEach((i) => {
+        newDocuments[i] = {
+          name: this.automerge[i].name,
+        };
+      });
+      this.documents = newDocuments;
     },
     /** Save file */
     saveFile() {
-      if (
-        this.automerge[this.currentTab].value.length == 1 &&
-        this.automerge[this.currentTab].value[0] == ""
-      ) {
-        return;
-      }
+      if (!this.automerge[this.currentTab].value.length) return;
 
       let pom = document.createElement("a");
       pom.setAttribute(
         "href",
         "data:text/plain;charset=utf-8," +
-          encodeURIComponent(this.automerge[this.currentTab].value.join("\n"))
+          encodeURIComponent(this.automerge[this.currentTab].value)
       );
       pom.setAttribute("download", this.automerge[this.currentTab].name);
 
@@ -499,10 +432,10 @@ export default defineComponent({
         connection.on("data", (data) => {
           /** Build Uint8Array from string */
           let changes = [];
-          for (let i = 0; i < data.length; i++) {
+          for (const change of data) {
             changes.push(
               Uint8Array.from(
-                data[i].replace("[", "").replace("]", "").split(",")
+                change.replace("[", "").replace("]", "").split(",")
               )
             );
           }

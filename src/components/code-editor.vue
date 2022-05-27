@@ -52,7 +52,7 @@ export default defineComponent({
   name: "code-editor",
   props: {
     documentKey: String,
-    value: Array,
+    value: String,
   },
   watch: {
     /** Watch window resize (to calculate editors height) */
@@ -72,7 +72,7 @@ export default defineComponent({
     updateValue(value) {
       const cursor = this.cm.getCursor();
       this.cm.replaceRange(
-        value.join("\n"),
+        value,
         { line: 0, ch: 0 },
         { line: this.cm.lastLine() + 1, ch: 0 },
         "automerge"
@@ -104,7 +104,7 @@ export default defineComponent({
         "Ctrl-/": "toggleComment",
       },
     });
-    this.cm.setValue(this.value.join("\n"));
+    this.cm.setValue(this.value);
 
     /** Clear history on load */
     this.cm.doc.clearHistory();
@@ -125,10 +125,13 @@ export default defineComponent({
     });
 
     /** Make changes to Automerge */
-    this.cm.on("changes", (cm, changes) => {
+    this.cm.on("change", (cm, change) => {
       this.emitter.emit("handleChanges", {
         key: this.documentKey,
-        changes: changes,
+        origin: change.origin,
+        stIndex: cm.indexFromPos(change.from),
+        delta: change.removed.join("\n").length,
+        text: change.text.join("\n"),
       });
     });
 
