@@ -74,7 +74,7 @@ export default defineComponent({
       this.cm.replaceRange(
         value,
         { line: 0, ch: 0 },
-        { line: this.cm.lastLine() + 1, ch: 0 },
+        { line: this.cm.lastLine() },
         "automerge"
       );
       this.cm.setCursor(cursor);

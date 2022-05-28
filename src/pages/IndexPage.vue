@@ -74,7 +74,7 @@
           <code-editor
             :ref="'editor_' + key"
             :documentKey="key"
-            :value="automerge[key].value"
+            :value="automerge[key].value.toString()"
           ></code-editor>
         </div>
         <div
@@ -310,7 +310,7 @@ export default defineComponent({
       this.automerge = Automerge.change(this.automerge, "newTab", (docs) => {
         docs[newKey] = {
           name: name,
-          value: value,
+          value: new Automerge.Text(value),
         };
       });
 
@@ -376,10 +376,8 @@ export default defineComponent({
 
       /** Make change */
       this.automerge = Automerge.change(this.automerge, "changes", (docs) => {
-        docs[data.key].value =
-          docs[data.key].value.slice(0, data.stIndex) +
-          data.text +
-          docs[data.key].value.slice(data.stIndex + data.delta);
+        docs[data.key].value.deleteAt(data.stIndex, data.delta);
+        docs[data.key].value.insertAt(data.stIndex, ...data.text.split(""));
       });
 
       /** Broadcast change */
