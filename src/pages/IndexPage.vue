@@ -225,7 +225,10 @@ export default defineComponent({
 
           /** Update editor content */
           Object.keys(this.automerge).forEach((i) => {
-            this.emitter.emit("updateValue" + i, this.automerge[i].value);
+            this.emitter.emit(
+              "updateValue" + i,
+              this.automerge[i].value.toString()
+            );
           });
 
           /** Set new active tab */
@@ -456,7 +459,10 @@ export default defineComponent({
 
           /** Update editor content */
           Object.keys(this.automerge).forEach((i) => {
-            this.emitter.emit("updateValue" + i, this.automerge[i].value);
+            this.emitter.emit(
+              "updateValue" + i,
+              this.automerge[i].value.toString()
+            );
           });
 
           /** Set new active tab */
