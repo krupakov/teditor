@@ -142,6 +142,7 @@ export default defineComponent({
       peerId: ref(""),
       connectUrl: ref(""),
       connectedPeers: ref({}),
+      username: ref("User"),
     };
   },
   mounted() {
@@ -160,6 +161,9 @@ export default defineComponent({
     });
     this.emitter.on("handleChanges", (data) => {
       this.handleChanges(data);
+    });
+    this.emitter.on("handleCursorActivity", (data) => {
+      this.handleCursorActivity(data);
     });
     this.emitter.on("execCommand", (command) => {
       this.emitter.emit("execCommand" + this.currentTab, command);
@@ -182,6 +186,8 @@ export default defineComponent({
 
     this.peer.on("connection", (connection) => {
       connection.on("open", () => {
+        this.addStyleTag(connection.peer);
+
         /** Send object snapshot */
         let changes = [];
         const automergeChanges = Automerge.getChanges(
@@ -192,56 +198,74 @@ export default defineComponent({
         for (const change of automergeChanges) {
           changes.push(change.toString());
         }
-        connection.send(changes);
+        connection.send({
+          type: "input",
+          username: this.username,
+          changes: changes,
+        });
 
         this.connectedPeers[connection.peer] = connection;
 
         connection.on("data", (data) => {
-          /** Build Uint8Array from string */
-          changes = [];
-          for (const change of data) {
-            changes.push(
-              Uint8Array.from(
-                change.replace("[", "").replace("]", "").split(",")
-              )
-            );
+          switch (data.type) {
+            case "input":
+              /** Build Uint8Array from string */
+              changes = [];
+              for (const change of data.changes) {
+                changes.push(
+                  Uint8Array.from(
+                    change.replace("[", "").replace("]", "").split(",")
+                  )
+                );
+              }
+
+              /** Apply changes to automerge */
+              let patch;
+              [this.automerge, patch] = Automerge.applyChanges(
+                this.automerge,
+                changes
+              );
+
+              /** Apply changes to reactive object */
+              let newDocuments = {};
+              Object.keys(this.automerge).forEach((i) => {
+                newDocuments[i] = {
+                  name: this.automerge[i].name,
+                };
+              });
+              this.documents = newDocuments;
+
+              /** Update editor content */
+              Object.keys(this.automerge).forEach((i) => {
+                this.emitter.emit(
+                  "updateValue" + i,
+                  this.automerge[i].value.toString()
+                );
+              });
+
+              /** Set new active tab */
+              if (!this.documents.hasOwnProperty(this.currentTab)) {
+                this.currentTab = Object.keys(this.documents)[0];
+              }
+
+              /** Broadcast change to other peers */
+              this.broadcast(data, connection.peer);
+              break;
+            case "cursor":
+              this.emitter.emit("setAnchor" + data.changes.key, {
+                peerId: connection.peer,
+                ...data.changes,
+              });
+              break;
           }
-
-          /** Apply changes to automerge */
-          let patch;
-          [this.automerge, patch] = Automerge.applyChanges(
-            this.automerge,
-            changes
-          );
-
-          /** Apply changes to reactive object */
-          let newDocuments = {};
-          Object.keys(this.automerge).forEach((i) => {
-            newDocuments[i] = {
-              name: this.automerge[i].name,
-            };
-          });
-          this.documents = newDocuments;
-
-          /** Update editor content */
-          Object.keys(this.automerge).forEach((i) => {
-            this.emitter.emit(
-              "updateValue" + i,
-              this.automerge[i].value.toString()
-            );
-          });
-
-          /** Set new active tab */
-          if (!this.documents.hasOwnProperty(this.currentTab)) {
-            this.currentTab = Object.keys(this.documents)[0];
-          }
-
-          /** Broadcast change to other peers */
-          this.broadcast(data, connection.peer);
         });
       });
       connection.on("close", () => {
         delete this.connectedPeers[connection.peer];
+        this.emitter.emit("removeAnchor", connection.peer);
+
+        let style = document.getElementById(connection.peer);
+        style.parentNode.removeChild(style);
       });
     });
 
@@ -301,6 +325,57 @@ export default defineComponent({
             .match(/rgb\(.*\)/gi)[0];
       });
     },
+    addStyleTag(peerId) {
+      let total = 0;
+      for (let c of peerId) total += c.charCodeAt(0);
+
+      let hex = total.toString(16);
+      while (hex.length < 3) hex += hex[hex.length - 1];
+      hex = hex.substr(0, 3);
+
+      let color = "#";
+      for (let c of hex) color += `${c}0`;
+
+      let style = document.createElement("style");
+      style.type = "text/css";
+      style.setAttribute("id", peerId);
+      style.appendChild(
+        document.createTextNode(`
+        .selection-${peerId} {
+          background-color: ${color};
+        }
+        .left-${peerId} {
+          animation: cursor-left-${peerId} 1s infinite;
+        }
+        .right-${peerId} {
+          animation: cursor-right-${peerId} 1s infinite;
+        }
+        @keyframes cursor-left-${peerId} {
+          0% {
+            box-shadow: inset 1px 0 0 0 transparent;
+          }
+          50% {
+            box-shadow: inset 1px 0 0 0 ${color};
+          }
+          100% {
+            box-shadow: inset 1px 0 0 0 transparent;
+          }
+        }
+        @keyframes cursor-right-${peerId} {
+          0% {
+            box-shadow: inset -1px 0 0 0 transparent;
+          }
+          50% {
+            box-shadow: inset -1px 0 0 0 ${color};
+          }
+          100% {
+            box-shadow: inset -1px 0 0 0 transparent;
+          }
+        }
+      `)
+      );
+      document.getElementsByTagName("head")[0].appendChild(style);
+    },
     copyLink() {
       const clipboardData = window.clipboardData || navigator.clipboard;
 
@@ -323,7 +398,11 @@ export default defineComponent({
 
       /** Broadcast change */
       let change = Automerge.getLastLocalChange(this.automerge);
-      this.broadcast([change.toString()]);
+      this.broadcast({
+        type: "input",
+        username: this.username,
+        changes: [change.toString()],
+      });
 
       this.currentTab = newKey;
     },
@@ -340,7 +419,11 @@ export default defineComponent({
 
       /** Broadcast change */
       let change = Automerge.getLastLocalChange(this.automerge);
-      this.broadcast([change.toString()]);
+      this.broadcast({
+        type: "input",
+        username: this.username,
+        changes: [change.toString()],
+      });
 
       if (this.currentTab == key) {
         newCurrent = keys[index - 1] || keys[index + 1] || "";
@@ -385,7 +468,11 @@ export default defineComponent({
 
       /** Broadcast change */
       let change = Automerge.getLastLocalChange(this.automerge);
-      this.broadcast([change.toString()]);
+      this.broadcast({
+        type: "input",
+        username: this.username,
+        changes: [change.toString()],
+      });
 
       /** Apply changes to reactive object */
       let newDocuments = {};
@@ -395,6 +482,14 @@ export default defineComponent({
         };
       });
       this.documents = newDocuments;
+    },
+    /** Send user's cursor activity to peers */
+    handleCursorActivity(data) {
+      this.broadcast({
+        type: "cursor",
+        username: this.username,
+        changes: data,
+      });
     },
     /** Save file */
     saveFile() {
@@ -429,61 +524,76 @@ export default defineComponent({
       connection.on("open", () => {
         this.$q.loading.hide();
         this.connectedPeers[connection.peer] = connection;
+        this.addStyleTag(connection.peer);
 
         connection.on("data", (data) => {
-          /** Build Uint8Array from string */
-          let changes = [];
-          for (const change of data) {
-            changes.push(
-              Uint8Array.from(
-                change.replace("[", "").replace("]", "").split(",")
-              )
-            );
+          switch (data.type) {
+            case "input":
+              /** Build Uint8Array from string */
+              let changes = [];
+              for (const change of data.changes) {
+                changes.push(
+                  Uint8Array.from(
+                    change.replace("[", "").replace("]", "").split(",")
+                  )
+                );
+              }
+
+              /** Apply changes to automerge */
+              let patch;
+              [this.automerge, patch] = Automerge.applyChanges(
+                this.automerge,
+                changes
+              );
+
+              /** Apply changes to reactive object */
+              let newDocuments = {};
+              Object.keys(this.automerge).forEach((i) => {
+                newDocuments[i] = {
+                  name: this.automerge[i].name,
+                };
+              });
+              this.documents = newDocuments;
+
+              /** Update editor content */
+              Object.keys(this.automerge).forEach((i) => {
+                this.emitter.emit(
+                  "updateValue" + i,
+                  this.automerge[i].value.toString()
+                );
+              });
+
+              /** Set new active tab */
+              if (!this.documents.hasOwnProperty(this.currentTab)) {
+                this.currentTab = Object.keys(this.documents)[0];
+              }
+
+              /** Broadcast change to other peers */
+              this.broadcast(data, connection.peer);
+              break;
+            case "cursor":
+              this.emitter.emit("setAnchor" + data.changes.key, {
+                peerId: connection.peer,
+                ...data.changes,
+              });
+              break;
           }
-
-          /** Apply changes to automerge */
-          let patch;
-          [this.automerge, patch] = Automerge.applyChanges(
-            this.automerge,
-            changes
-          );
-
-          /** Apply changes to reactive object */
-          let newDocuments = {};
-          Object.keys(this.automerge).forEach((i) => {
-            newDocuments[i] = {
-              name: this.automerge[i].name,
-            };
-          });
-          this.documents = newDocuments;
-
-          /** Update editor content */
-          Object.keys(this.automerge).forEach((i) => {
-            this.emitter.emit(
-              "updateValue" + i,
-              this.automerge[i].value.toString()
-            );
-          });
-
-          /** Set new active tab */
-          if (!this.documents.hasOwnProperty(this.currentTab)) {
-            this.currentTab = Object.keys(this.documents)[0];
-          }
-
-          /** Broadcast change to other peers */
-          this.broadcast(data, connection.peer);
         });
       });
       connection.on("close", () => {
         this.$q.loading.hide();
         delete this.connectedPeers[connection.peer];
+        this.emitter.emit("removeAnchor", connection.peer);
+
+        let style = document.getElementById(connection.peer);
+        style.parentNode.removeChild(style);
       });
     },
     /** Send changes */
-    broadcast(changes, exclude = "") {
+    broadcast(data, exclude = "") {
       Object.keys(this.connectedPeers).forEach((i) => {
         if (i != exclude) {
-          this.connectedPeers[i].send(changes);
+          this.connectedPeers[i].send(data);
         }
       });
     },

@@ -79,11 +79,51 @@ export default defineComponent({
       );
       this.cm.setCursor(cursor);
     },
+    setAnchor(data) {
+      this.removeAnchor(data.peerId);
+
+      let stPos, edPos;
+      this.anchorMap[data.peerId] = [];
+
+      if (data.stIndex !== data.edIndex) {
+        stPos = this.cm.posFromIndex(data.stIndex);
+        edPos = this.cm.posFromIndex(data.edIndex);
+
+        this.anchorMap[data.peerId].push(
+          this.cm.markText(stPos, edPos, {
+            className: "selection selection-" + data.peerId,
+          })
+        );
+      }
+
+      if (data.stIndex === data.edIndex) {
+        data.stIndex = Math.max(0, data.stIndex - 1);
+      }
+
+      const index = data.prefixed ? data.stIndex : data.edIndex;
+      stPos = this.cm.posFromIndex(index + (data.prefixed ? 0 : -1));
+      edPos = this.cm.posFromIndex(index + (data.prefixed ? 1 : 0));
+
+      this.anchorMap[data.peerId].push(
+        this.cm.markText(stPos, edPos, {
+          className:
+            " cursor " +
+            (data.prefixed ? "left-" + data.peerId : "right-" + data.peerId),
+        })
+      );
+    },
+    removeAnchor(peerId) {
+      if (peerId in this.anchorMap) {
+        this.anchorMap[peerId].forEach((m) => m.clear());
+        delete this.anchorMap[peerId];
+      }
+    },
   },
   setup() {
     const { height } = useWindowSize();
     return {
       windowHeight: height,
+      anchorMap: {},
     };
   },
   mounted() {
@@ -135,6 +175,22 @@ export default defineComponent({
       });
     });
 
+    /** Send user's cursor activity to peers */
+    this.cm.on("cursorActivity", (cm) => {
+      const stIndex = cm.indexFromPos(cm.getCursor("start")),
+        edIndex = cm.indexFromPos(cm.getCursor("end")),
+        hdIndex = cm.indexFromPos(cm.getCursor("head"));
+
+      const prefixed = hdIndex === stIndex && stIndex !== edIndex;
+
+      this.emitter.emit("handleCursorActivity", {
+        key: this.documentKey,
+        stIndex: stIndex,
+        edIndex: edIndex,
+        prefixed: prefixed,
+      });
+    });
+
     /** Handle event call from other components */
     this.emitter.on("execCommand" + this.documentKey, (command) => {
       this.execCommand(command);
@@ -150,6 +206,16 @@ export default defineComponent({
     /** Update editor content on call */
     this.emitter.on("updateValue" + this.documentKey, (value) => {
       this.updateValue(value);
+    });
+
+    /** Show cursor activity of other users */
+    this.emitter.on("setAnchor" + this.documentKey, (data) => {
+      this.setAnchor(data);
+    });
+
+    /** Remove cursor activity of a user */
+    this.emitter.on("removeAnchor", (peerId) => {
+      this.removeAnchor(peerId);
     });
 
     /** Set fixed size for the editor */
