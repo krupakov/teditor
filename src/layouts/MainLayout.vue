@@ -15,14 +15,18 @@
           />
         </svg>
         <div class="cursor-pointer non-selectable header-item">
-          File
+          {{ this.$t("layout.file") }}
           <q-menu :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable v-close-popup>
-                <q-item-section @click="emit('newTab')">New</q-item-section>
+                <q-item-section @click="emit('newTab')">{{
+                  this.$t("layout.newFile")
+                }}</q-item-section>
               </q-item>
               <q-item clickable v-close-popup>
-                <q-item-section @click="openFile()">Open...</q-item-section>
+                <q-item-section @click="openFile()">{{
+                  this.$t("layout.openFile")
+                }}</q-item-section>
                 <input
                   id="openFile"
                   name="openFile"
@@ -35,60 +39,64 @@
               <q-separator />
 
               <q-item clickable v-close-popup>
-                <q-item-section @click="saveFile()">Save</q-item-section>
+                <q-item-section @click="saveFile()">{{
+                  this.$t("layout.saveFile")
+                }}</q-item-section>
               </q-item>
 
               <q-separator />
 
               <q-item clickable v-close-popup>
-                <q-item-section>Settings</q-item-section>
+                <q-item-section>{{
+                  this.$t("layout.settings")
+                }}</q-item-section>
               </q-item>
             </q-list>
           </q-menu>
         </div>
 
         <div class="q-ml-md cursor-pointer non-selectable header-item">
-          Edit
+          {{ this.$t("layout.edit") }}
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable>
-                <q-item-section @click="execCommand('undo')"
-                  >Undo</q-item-section
-                >
+                <q-item-section @click="execCommand('undo')">{{
+                  this.$t("layout.undo")
+                }}</q-item-section>
               </q-item>
               <q-item clickable>
-                <q-item-section @click="execCommand('redo')"
-                  >Redo</q-item-section
-                >
-              </q-item>
-
-              <q-separator />
-
-              <q-item clickable>
-                <q-item-section @click="execCommand('find')"
-                  >Find</q-item-section
-                >
+                <q-item-section @click="execCommand('redo')">{{
+                  this.$t("layout.redo")
+                }}</q-item-section>
               </q-item>
 
               <q-separator />
 
               <q-item clickable>
-                <q-item-section @click="execCommand('selectAll')"
-                  >Select All</q-item-section
-                >
+                <q-item-section @click="execCommand('find')">{{
+                  this.$t("layout.find")
+                }}</q-item-section>
+              </q-item>
+
+              <q-separator />
+
+              <q-item clickable>
+                <q-item-section @click="execCommand('selectAll')">{{
+                  this.$t("layout.selectAll")
+                }}</q-item-section>
               </q-item>
             </q-list>
           </q-menu>
         </div>
 
         <div class="q-ml-md cursor-pointer non-selectable header-item">
-          View
+          {{ this.$t("layout.view") }}
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable>
-                <q-item-section @click="emit('sidePanel')"
-                  >P2P Connection</q-item-section
-                >
+                <q-item-section @click="emit('sidePanel')">{{
+                  this.$t("layout.connection")
+                }}</q-item-section>
               </q-item>
             </q-list>
           </q-menu>

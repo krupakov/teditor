@@ -20,7 +20,7 @@
         <q-btn
           color="accent"
           icon="note_add"
-          label="New File"
+          :label="this.$t('index.newFile')"
           @click="newTab()"
         />
       </div>
@@ -107,7 +107,8 @@
                 }"
               ></div>
               <span class="counter"
-                >{{ Object.keys(connectedPeers).length }} Active Peers</span
+                >{{ Object.keys(connectedPeers).length }}
+                {{ this.$t("index.peer.counter") }}</span
               >
             </div>
           </div>
@@ -118,7 +119,8 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
+import { defineComponent, computed, ref } from "vue";
+import { useMeta } from "quasar";
 import CodeEditor from "components/code-editor";
 import ShowDialog from "components/show-dialog";
 import * as Automerge from "automerge";
@@ -146,6 +148,12 @@ export default defineComponent({
     };
   },
   mounted() {
+    const appTitle = computed(() => this.$t("appTitle"));
+
+    useMeta(() => {
+      return { title: appTitle.value };
+    });
+
     this.connectUrl = window.location.host + "/?connect=";
 
     /** Event bus handlers */
@@ -276,9 +284,8 @@ export default defineComponent({
           this.$q.dialog({
             component: ShowDialog,
             componentProps: {
-              title: "Error",
-              message:
-                "You have disconnected from the connection broker. Existing connections will not be closed, but any new connections cannot be established.",
+              title: this.$t("errorTitle"),
+              message: this.$t("index.peer.disconnectedMessage"),
               cancelBtn: false,
             },
           });
@@ -292,8 +299,8 @@ export default defineComponent({
         this.$q.dialog({
           component: ShowDialog,
           componentProps: {
-            title: "Error",
-            message: "Unable to connect to peer",
+            title: this.$t("errorTitle"),
+            message: this.$t("index.peer.errorMessage"),
             cancelBtn: false,
           },
         });
@@ -444,8 +451,8 @@ export default defineComponent({
           .dialog({
             component: ShowDialog,
             componentProps: {
-              title: "Close - " + name,
-              message: "Your changes will be lost. Continue?",
+              title: this.$t("index.fileCloseTitle") + name,
+              message: this.$t("index.changesLostMessage"),
             },
           })
           .onOk(() => {
@@ -518,7 +525,7 @@ export default defineComponent({
       this.sidePanel = false;
 
       this.$q.loading.show({
-        message: "Connecting to peer...",
+        message: this.$t("index.peer.connectingMessage"),
       });
 
       connection.on("open", () => {
