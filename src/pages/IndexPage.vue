@@ -144,7 +144,6 @@ export default defineComponent({
       peerId: ref(""),
       connectUrl: ref(""),
       connectedPeers: ref({}),
-      username: ref("User"),
     };
   },
   mounted() {
@@ -208,7 +207,6 @@ export default defineComponent({
         }
         connection.send({
           type: "input",
-          username: this.username,
           changes: changes,
         });
 
@@ -352,32 +350,12 @@ export default defineComponent({
           background-color: ${color};
         }
         .left-${peerId} {
-          animation: cursor-left-${peerId} 1s infinite;
+          box-shadow: -1px 0 0 0 ${color};
+          animation: cursor-left 1s step-end infinite;
         }
         .right-${peerId} {
-          animation: cursor-right-${peerId} 1s infinite;
-        }
-        @keyframes cursor-left-${peerId} {
-          0% {
-            box-shadow: inset 1px 0 0 0 transparent;
-          }
-          50% {
-            box-shadow: inset 1px 0 0 0 ${color};
-          }
-          100% {
-            box-shadow: inset 1px 0 0 0 transparent;
-          }
-        }
-        @keyframes cursor-right-${peerId} {
-          0% {
-            box-shadow: inset -1px 0 0 0 transparent;
-          }
-          50% {
-            box-shadow: inset -1px 0 0 0 ${color};
-          }
-          100% {
-            box-shadow: inset -1px 0 0 0 transparent;
-          }
+          box-shadow: 1px 0 0 0 ${color};
+          animation: cursor-right 1s step-end infinite;
         }
       `)
       );
@@ -407,7 +385,6 @@ export default defineComponent({
       let change = Automerge.getLastLocalChange(this.automerge);
       this.broadcast({
         type: "input",
-        username: this.username,
         changes: [change.toString()],
       });
 
@@ -428,7 +405,6 @@ export default defineComponent({
       let change = Automerge.getLastLocalChange(this.automerge);
       this.broadcast({
         type: "input",
-        username: this.username,
         changes: [change.toString()],
       });
 
@@ -477,7 +453,6 @@ export default defineComponent({
       let change = Automerge.getLastLocalChange(this.automerge);
       this.broadcast({
         type: "input",
-        username: this.username,
         changes: [change.toString()],
       });
 
@@ -494,7 +469,6 @@ export default defineComponent({
     handleCursorActivity(data) {
       this.broadcast({
         type: "cursor",
-        username: this.username,
         changes: data,
       });
     },
