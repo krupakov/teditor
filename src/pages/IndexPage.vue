@@ -267,11 +267,7 @@ export default defineComponent({
         });
       });
       connection.on("close", () => {
-        delete this.connectedPeers[connection.peer];
-        this.emitter.emit("removeAnchor", connection.peer);
-
-        let style = document.getElementById(connection.peer);
-        style.parentNode.removeChild(style);
+        this.onConnectionClose(connection.peer);
       });
     });
 
@@ -304,6 +300,17 @@ export default defineComponent({
         });
       }
     });
+
+    /** Sometimes DataConnection.on('close') event just doesn't trigger
+     *  This is just a workaround to clean up the editor from dead peers
+     */
+    setInterval(() => {
+      Object.keys(this.connectedPeers).forEach((i) => {
+        if (!this.connectedPeers[i].open) {
+          this.onConnectionClose(i);
+        }
+      });
+    }, 5000);
   },
   methods: {
     getTabStyles() {
@@ -562,13 +569,15 @@ export default defineComponent({
         });
       });
       connection.on("close", () => {
-        this.$q.loading.hide();
-        delete this.connectedPeers[connection.peer];
-        this.emitter.emit("removeAnchor", connection.peer);
-
-        let style = document.getElementById(connection.peer);
-        style.parentNode.removeChild(style);
+        this.onConnectionClose(connection.peer);
       });
+    },
+    onConnectionClose(peerId) {
+      delete this.connectedPeers[peerId];
+      this.emitter.emit("removeAnchor", peerId);
+
+      let style = document.getElementById(peerId);
+      style.parentNode.removeChild(style);
     },
     /** Send changes */
     broadcast(data, exclude = "") {
