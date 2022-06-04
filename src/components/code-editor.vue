@@ -70,14 +70,24 @@ export default defineComponent({
       this.cm.focus();
     },
     updateValue(value) {
+      const view = this.cm.getScrollInfo();
       const cursor = this.cm.getCursor();
+      const selections = this.cm.listSelections();
+
       this.cm.replaceRange(
         value,
         { line: 0, ch: 0 },
         { line: this.cm.lastLine() },
         "automerge"
       );
-      this.cm.setCursor(cursor);
+
+      setTimeout(() => {
+        this.cm.setCursor(cursor);
+        this.cm.scrollTo(view.left, view.top);
+        this.cm.setSelections(selections, null, {
+          scroll: false,
+        });
+      }, 0);
     },
     setAnchor(data) {
       this.removeAnchor(data.peerId);
