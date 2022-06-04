@@ -8,10 +8,10 @@
         {{ message }}
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat :label="this.$t('ok')" color="accent" @click="onDialogOK" />
+        <q-btn flat :label="ok" color="accent" @click="onDialogOK" />
         <q-btn
           flat
-          :label="this.$t('cancel')"
+          :label="cancel"
           color="accent"
           v-if="cancelBtn"
           @click="onDialogCancel"
@@ -21,27 +21,44 @@
   </q-dialog>
 </template>
 
-<script setup>
+<script>
 import { useDialogPluginComponent } from "quasar";
 
-const props = defineProps({
-  title: {
-    required: false,
-    type: String,
+export default {
+  props: {
+    title: {
+      required: false,
+      type: String,
+    },
+    message: {
+      required: false,
+      type: String,
+    },
+    cancelBtn: {
+      required: false,
+      default: true,
+      type: Boolean,
+    },
   },
-  message: {
-    required: false,
-    type: String,
+  emits: [...useDialogPluginComponent.emits],
+  computed: {
+    ok() {
+      return this.$t("ok");
+    },
+    cancel() {
+      return this.$t("cancel");
+    },
   },
-  cancelBtn: {
-    required: false,
-    default: true,
-    type: Boolean,
-  },
-});
+  setup() {
+    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
+      useDialogPluginComponent();
 
-defineEmits([...useDialogPluginComponent.emits]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
-  useDialogPluginComponent();
+    return {
+      dialogRef,
+      onDialogHide,
+      onDialogOK,
+      onDialogCancel,
+    };
+  },
+};
 </script>
