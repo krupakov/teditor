@@ -1,9 +1,16 @@
 diff --git a/node_modules/codemirror-search-replace/src/search.js b/node_modules/codemirror-search-replace/src/search.js
-index 15a70f2..6fcada0 100644
+index 15a70f2..41fc594 100644
 --- a/node_modules/codemirror-search-replace/src/search.js
 +++ b/node_modules/codemirror-search-replace/src/search.js
-@@ -16,30 +16,27 @@
+@@ -11,35 +11,32 @@
+ })(function (CodeMirror) {
+   "use strict";
+ 
+-  var Search;
+-
    CodeMirror.defineOption("searchbox", false, function (cm) {
++    var Search;
++
      cm.addKeyMap({
        "Ctrl-F": function () {
 -        var cmEle = cm.display.wrapper;
@@ -25,9 +32,9 @@ index 15a70f2..6fcada0 100644
 -        if (!Search || !Search.isVisible()) return CodeMirror.Pass;
 +        if (!Search || !Search.isVisible())
 +          return CodeMirror.Pass;
- 
+             
          Search.hide();
- 
+         
 -        if (typeof event !== "undefined") event.stopPropagation();
 +        if (typeof event !== "undefined")
 +          event.stopPropagation();
@@ -137,6 +144,15 @@ index 15a70f2..6fcada0 100644
        clearSearch(cm);
        doSearch(cm, val, caseSensitive);
        updateCount();
+@@ -258,7 +260,7 @@
+         is = next();
+ 
+         if (is) {
+-          cm.setCursor(cm.doc.size - 1, 0);
++          cm.setCursor(cm.doc.size, 0);
+           find(value, options, callback);
+           done = true;
+         }
 @@ -272,9 +274,6 @@
          }
        }
@@ -201,7 +217,18 @@ index 15a70f2..6fcada0 100644
      };
  
      this.toggleReplace = function () {
-@@ -372,16 +365,15 @@
+@@ -361,9 +354,7 @@
+ 
+     this.hide = function () {
+       clearSearch(cm);
+-      var cmEle = cm.display.wrapper;
+-      Search = null;
+-      cmEle.parentElement.removeChild(this.element);
++      this.element.style.display = "none";
+       cm.focus();
+     };
+ 
+@@ -372,16 +363,15 @@
        return is;
      };
  
@@ -222,7 +249,7 @@ index 15a70f2..6fcada0 100644
        this.searchInput.focus();
        this.searchInput.select();
      };
-@@ -504,203 +496,27 @@
+@@ -504,203 +494,27 @@
        var val = self.searchInput.value;
        var matches = [];
        if (val) {
@@ -437,7 +464,7 @@ index 15a70f2..6fcada0 100644
      }
  
      function addHtml() {
-@@ -708,30 +524,30 @@
+@@ -708,30 +522,30 @@
          el = cm.display.wrapper,
          div = document.createElement("div"),
          html = [
