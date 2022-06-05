@@ -1,8 +1,8 @@
 diff --git a/node_modules/codemirror-search-replace/src/search.js b/node_modules/codemirror-search-replace/src/search.js
-index 15a70f2..41fc594 100644
+index 15a70f2..9b41ad4 100644
 --- a/node_modules/codemirror-search-replace/src/search.js
 +++ b/node_modules/codemirror-search-replace/src/search.js
-@@ -11,35 +11,32 @@
+@@ -11,67 +11,81 @@
  })(function (CodeMirror) {
    "use strict";
  
@@ -32,9 +32,9 @@ index 15a70f2..41fc594 100644
 -        if (!Search || !Search.isVisible()) return CodeMirror.Pass;
 +        if (!Search || !Search.isVisible())
 +          return CodeMirror.Pass;
-             
+ 
          Search.hide();
-         
+ 
 -        if (typeof event !== "undefined") event.stopPropagation();
 +        if (typeof event !== "undefined")
 +          event.stopPropagation();
@@ -50,7 +50,18 @@ index 15a70f2..41fc594 100644
        },
      });
    });
-@@ -50,28 +47,37 @@
+ 
++  CodeMirror.commands.find = function (cm) {
++    cm.triggerOnKeyDown({
++      type: 'keydown',
++      keyCode: 70,
++      ctrlKey: true,
++    });
++  };
++
+   function SearchBox(cm) {
+     var self = this;
+ 
      init();
  
      function initElements(el) {
@@ -98,7 +109,7 @@ index 15a70f2..41fc594 100644
        el.addEventListener("mousedown", function (e) {
          setTimeout(function () {
            self.activeInput.focus();
-@@ -109,9 +115,7 @@
+@@ -109,9 +123,7 @@
        var sb = self,
          obj = {
            "Ctrl-F|Cmd-F|Ctrl-H|Command-Alt-F": function () {
@@ -109,7 +120,7 @@ index 15a70f2..41fc594 100644
            },
            "Ctrl-G|Cmd-G": function () {
              sb.findNext();
-@@ -214,7 +218,6 @@
+@@ -214,7 +226,6 @@
          return;
        }
        var done,
@@ -117,7 +128,7 @@ index 15a70f2..41fc594 100644
          searchCursor,
          next,
          prev,
-@@ -229,18 +232,17 @@
+@@ -229,18 +240,17 @@
          wholeWord = o.wholeWord;
  
        if (regExp) {
@@ -144,7 +155,7 @@ index 15a70f2..41fc594 100644
        clearSearch(cm);
        doSearch(cm, val, caseSensitive);
        updateCount();
-@@ -258,7 +260,7 @@
+@@ -258,7 +268,7 @@
          is = next();
  
          if (is) {
@@ -153,7 +164,7 @@ index 15a70f2..41fc594 100644
            find(value, options, callback);
            done = true;
          }
-@@ -272,9 +274,6 @@
+@@ -272,9 +282,6 @@
          }
        }
  
@@ -163,7 +174,7 @@ index 15a70f2..41fc594 100644
        if (!done && is) callback(searchCursor);
      }
  
-@@ -287,11 +286,7 @@
+@@ -287,11 +294,7 @@
      };
  
      this.findAll = function () {
@@ -176,7 +187,7 @@ index 15a70f2..41fc594 100644
  
        if (cm.showMatchesOnScrollbar) cm.showMatchesOnScrollbar(value);
  
-@@ -300,9 +295,11 @@
+@@ -300,9 +303,11 @@
  
      this.replace = function () {
        var readOnly = cm.getOption("readOnly"),
@@ -191,7 +202,7 @@ index 15a70f2..41fc594 100644
        updateCount();
      };
  
-@@ -323,22 +320,18 @@
+@@ -323,22 +328,18 @@
          reg = RegExp(from, this.caseSensitiveOption.checked ? "g" : "gi");
  
        if (this.wholeWordOption.checked && !this.regExpOption.checked) {
@@ -202,13 +213,13 @@ index 15a70f2..41fc594 100644
 -        }
 +        reg = RegExp("\\b" + from + "\\b", this.caseSensitiveOption.checked ? "g" : "gi");
        }
-       
+ 
 -      if (!cm.getOption("readOnly") && cm.getSelection()) {
 +      if (!cm.getOption('readOnly')) {
          cursor = cm.getCursor();
          value = cm.getValue();
          value = value.replace(reg, to);
-         
+ 
          cm.setValue(value);
          cm.setCursor(cursor);
 +        updateCount();
@@ -217,7 +228,7 @@ index 15a70f2..41fc594 100644
      };
  
      this.toggleReplace = function () {
-@@ -361,9 +354,7 @@
+@@ -361,9 +362,7 @@
  
      this.hide = function () {
        clearSearch(cm);
@@ -228,7 +239,7 @@ index 15a70f2..41fc594 100644
        cm.focus();
      };
  
-@@ -372,16 +363,15 @@
+@@ -372,16 +371,15 @@
        return is;
      };
  
@@ -249,7 +260,7 @@ index 15a70f2..41fc594 100644
        this.searchInput.focus();
        this.searchInput.select();
      };
-@@ -504,203 +494,27 @@
+@@ -504,203 +502,27 @@
        var val = self.searchInput.value;
        var matches = [];
        if (val) {
@@ -286,11 +297,11 @@ index 15a70f2..41fc594 100644
 +      var countEle = cmEle.parentElement.querySelector(".search_counter");
        if (countEle) {
 -        countEle.innerText = count + " matches found.";
--      }
--      if (count === 0){
--        cm.setSelection({ch: 0, line: 0},{ch: 0, line: 0});
 +        countEle.innerText = count + " matches found";
        }
+-      if (count === 0){
+-        cm.setSelection({ch: 0, line: 0},{ch: 0, line: 0});
+-      }
 -    }
 -
 -    function addStyle() {
@@ -464,7 +475,7 @@ index 15a70f2..41fc594 100644
      }
  
      function addHtml() {
-@@ -708,30 +522,30 @@
+@@ -708,30 +530,30 @@
          el = cm.display.wrapper,
          div = document.createElement("div"),
          html = [
@@ -474,7 +485,7 @@ index 15a70f2..41fc594 100644
 -          '<input class="ace_search_field" placeholder="Search for" spellcheck="false"></input>',
 -          '<button type="button" action="findNext" class="ace_searchbtn next"></button>',
 -          '<button type="button" action="findPrev" class="ace_searchbtn prev"></button>',
-+          '<div class="search right">',
++          '<div class="search right" style="display: none;">',
 +          '<button type="button" action="hide" class="search_btn_close">',
 +          '<i action="hide" class="q-icon notranslate material-icons" aria-hidden="true" role="presentation">close</i>',
 +          '</button>',
