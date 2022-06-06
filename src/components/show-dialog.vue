@@ -8,10 +8,10 @@
         {{ message }}
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat :label="ok" color="accent" @click="onDialogOK" />
+        <q-btn flat :label="$t('ok')" color="accent" @click="onDialogOK" />
         <q-btn
           flat
-          :label="cancel"
+          :label="$t('cancel')"
           color="accent"
           v-if="cancelBtn"
           @click="onDialogCancel"
@@ -41,14 +41,6 @@ export default {
     },
   },
   emits: [...useDialogPluginComponent.emits],
-  computed: {
-    ok() {
-      return this.$t("ok");
-    },
-    cancel() {
-      return this.$t("cancel");
-    },
-  },
   setup() {
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
       useDialogPluginComponent();

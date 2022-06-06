@@ -3,7 +3,7 @@
     <div class="q-pa-md" style="width: 100%; padding: 0 !important">
       <div
         class="greeting column"
-        v-if="!Object.keys(documents).length && !this.$q.loading.isActive"
+        v-if="!Object.keys(documents).length && !$q.loading.isActive"
       >
         <svg
           width="200"
@@ -20,7 +20,7 @@
         <q-btn
           color="accent"
           icon="note_add"
-          :label="this.$t('index.newFile')"
+          :label="$t('index.newFile')"
           @click="newTab()"
         />
       </div>
@@ -79,9 +79,9 @@
         </div>
         <div
           class="side-panel col-3 order-last"
-          v-if="sidePanel && Object.keys(documents).length"
+          v-if="store.sidePanel && Object.keys(documents).length"
         >
-          <div class="close" @click="sidePanel = !sidePanel">
+          <div class="close" @click="store.toggleSidePanel()">
             <i
               class="q-icon notranslate material-icons"
               aria-hidden="true"
@@ -108,7 +108,7 @@
               ></div>
               <span class="counter"
                 >{{ Object.keys(connectedPeers).length }}
-                {{ this.$t("index.peer.counter") }}</span
+                {{ $t("index.peer.counter") }}</span
               >
             </div>
           </div>
@@ -120,7 +120,8 @@
 
 <script>
 import { defineComponent, computed, ref } from "vue";
-import { useMeta } from "quasar";
+import { useQuasar, useMeta } from "quasar";
+import { useStore } from "stores/main";
 import CodeEditor from "components/code-editor";
 import ShowDialog from "components/show-dialog";
 import * as Automerge from "automerge";
@@ -130,7 +131,32 @@ export default defineComponent({
   components: {
     CodeEditor,
   },
+  computed: {
+    theme() {
+      return this.store.editorTheme;
+    },
+  },
+  watch: {
+    theme: function () {
+      this.updateTabStyles();
+    },
+  },
   setup() {
+    const $q = useQuasar();
+    const store = useStore();
+
+    const dark =
+      localStorage.getItem("dark") !== null
+        ? JSON.parse(localStorage.getItem("dark"))
+        : $q.dark.isActive;
+
+    $q.dark.set(dark);
+
+    const theme = localStorage.getItem("theme");
+    if (theme) {
+      store.setEditorTheme(theme);
+    }
+
     return {
       automerge: Automerge.init(),
       documents: ref({}),
@@ -140,10 +166,10 @@ export default defineComponent({
         color: "",
         shadow: "",
       }),
-      sidePanel: ref(true),
       peerId: ref(""),
       connectUrl: ref(""),
       connectedPeers: ref({}),
+      store,
     };
   },
   mounted() {
@@ -163,9 +189,6 @@ export default defineComponent({
         this.newTab();
       }
     });
-    this.emitter.on("sidePanel", () => {
-      this.sidePanel = !this.sidePanel;
-    });
     this.emitter.on("handleChanges", (data) => {
       this.handleChanges(data);
     });
@@ -179,7 +202,7 @@ export default defineComponent({
       this.saveFile();
     });
 
-    this.getTabStyles();
+    this.updateTabStyles();
 
     /** PeerJs */
     this.peer.on("open", (id) => {
@@ -313,7 +336,7 @@ export default defineComponent({
     }, 5000);
   },
   methods: {
-    getTabStyles() {
+    updateTabStyles() {
       return new Promise((resolve, reject) => {
         const wait = setInterval(function () {
           if (document.querySelector(".CodeMirror")) {
@@ -503,7 +526,7 @@ export default defineComponent({
     connect() {
       let connection = this.peer.connect(this.$route.query.connect);
 
-      this.sidePanel = false;
+      this.store.toggleSidePanel();
 
       this.$q.loading.show({
         message: this.$t("index.peer.connectingMessage"),

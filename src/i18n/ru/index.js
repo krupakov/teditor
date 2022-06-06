@@ -30,4 +30,9 @@ export default {
       connectingMessage: "Подключение к пиру...",
     },
   },
+  settings: {
+    title: "Настройки",
+    dark: "Темная тема",
+    theme: "Тема редактора",
+  },
 };

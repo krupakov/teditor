@@ -4,6 +4,7 @@
 
 <script>
 import { defineComponent } from "vue";
+import { useStore } from "stores/main";
 import { useWindowSize } from "vue-window-size";
 
 /** Editor */
@@ -11,7 +12,19 @@ import CodeMirror from "codemirror";
 import "codemirror/lib/codemirror.css";
 
 /** Themes */
+import "codemirror/theme/dracula.css";
+import "codemirror/theme/eclipse.css";
+import "codemirror/theme/idea.css";
+import "codemirror/theme/lucario.css";
+import "codemirror/theme/mbo.css";
+import "codemirror/theme/material.css";
 import "codemirror/theme/monokai.css";
+import "codemirror/theme/moxer.css";
+import "codemirror/theme/neat.css";
+import "codemirror/theme/nord.css";
+import "codemirror/theme/oceanic-next.css";
+import "codemirror/theme/paraiso-light.css";
+import "codemirror/theme/yonce.css";
 
 /** Language modes */
 import "codemirror/mode/javascript/javascript.js";
@@ -54,6 +67,11 @@ export default defineComponent({
     documentKey: String,
     value: String,
   },
+  computed: {
+    theme() {
+      return this.store.editorTheme;
+    },
+  },
   watch: {
     /** Watch window resize (to calculate editors height) */
     windowHeight: function () {
@@ -61,6 +79,9 @@ export default defineComponent({
         null,
         document.querySelector(".CodeMirror").parentElement.clientHeight
       );
+    },
+    theme: function () {
+      this.cm.setOption("theme", this.store.editorTheme.toLowerCase());
     },
   },
   methods: {
@@ -130,16 +151,18 @@ export default defineComponent({
     },
   },
   setup() {
+    const store = useStore();
     const { height } = useWindowSize();
     return {
       windowHeight: height,
       anchorMap: {},
+      store,
     };
   },
   mounted() {
     /** Init Codemirror instance */
     this.cm = CodeMirror.fromTextArea(this.$refs.editor, {
-      theme: "monokai",
+      theme: this.store.editorTheme.toLowerCase() || "neat",
       mode: "text/javascript", // text/x-java text/javascript text/x-c++src text/x-csharp
       lineNumbers: true,
       lineWrapping: true,

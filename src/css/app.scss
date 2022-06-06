@@ -20,6 +20,14 @@
 }
 
 /* ===== Quasar ===== */
+.body--light {
+  background: var(--q-primary);
+
+  .q-menu {
+    background: var(--q-primary) !important;
+  }
+}
+
 .q-layout__shadow:after {
   box-shadow: none !important;
 }
@@ -129,7 +137,7 @@ header {
   }
 
   &:hover {
-    background-color: var(--q-tetriary);
+    background-color: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -293,4 +301,12 @@ header {
 li.CodeMirror-hint-active {
   background: #08f !important;
   color: white;
+}
+
+.theme-select {
+  height: 24px;
+  color: var(--q-color);
+  background-color: var(--q-secondary);
+  outline: none;
+  border: none;
 }

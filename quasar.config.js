@@ -23,7 +23,7 @@ module.exports = configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-webpack/boot-files
-    boot: ["i18n", "axios", "unwrapInjectedRef", "mitt", "peerjs"],
+    boot: ["pinia", "i18n", "axios", "unwrapInjectedRef", "mitt", "peerjs"],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-css
     css: ["app.scss", "search.scss"],
@@ -85,7 +85,7 @@ module.exports = configure(function (ctx) {
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-framework
     framework: {
       config: {
-        dark: true,
+        dark: false,
       },
 
       // iconSet: 'material-icons', // Quasar icon set

@@ -30,4 +30,9 @@ export default {
       connectingMessage: "Connecting to peer...",
     },
   },
+  settings: {
+    title: "Settings",
+    dark: "Dark Mode",
+    theme: "Editor Theme",
+  },
 };

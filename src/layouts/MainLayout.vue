@@ -15,17 +15,17 @@
           />
         </svg>
         <div class="cursor-pointer non-selectable header-item">
-          {{ this.$t("layout.file") }}
+          {{ $t("layout.file") }}
           <q-menu :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable v-close-popup>
                 <q-item-section @click="emit('newTab')">{{
-                  this.$t("layout.newFile")
+                  $t("layout.newFile")
                 }}</q-item-section>
               </q-item>
               <q-item clickable v-close-popup>
                 <q-item-section @click="openFile()">{{
-                  this.$t("layout.openFile")
+                  $t("layout.openFile")
                 }}</q-item-section>
                 <input
                   id="openFile"
@@ -40,15 +40,15 @@
 
               <q-item clickable v-close-popup>
                 <q-item-section @click="saveFile()">{{
-                  this.$t("layout.saveFile")
+                  $t("layout.saveFile")
                 }}</q-item-section>
               </q-item>
 
               <q-separator />
 
               <q-item clickable v-close-popup>
-                <q-item-section>{{
-                  this.$t("layout.settings")
+                <q-item-section @click="openSettings()">{{
+                  $t("layout.settings")
                 }}</q-item-section>
               </q-item>
             </q-list>
@@ -56,17 +56,17 @@
         </div>
 
         <div class="q-ml-md cursor-pointer non-selectable header-item">
-          {{ this.$t("layout.edit") }}
+          {{ $t("layout.edit") }}
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable>
                 <q-item-section @click="execCommand('undo')">{{
-                  this.$t("layout.undo")
+                  $t("layout.undo")
                 }}</q-item-section>
               </q-item>
               <q-item clickable>
                 <q-item-section @click="execCommand('redo')">{{
-                  this.$t("layout.redo")
+                  $t("layout.redo")
                 }}</q-item-section>
               </q-item>
 
@@ -74,7 +74,7 @@
 
               <q-item clickable>
                 <q-item-section @click="execCommand('find')">{{
-                  this.$t("layout.find")
+                  $t("layout.find")
                 }}</q-item-section>
               </q-item>
 
@@ -82,7 +82,7 @@
 
               <q-item clickable>
                 <q-item-section @click="execCommand('selectAll')">{{
-                  this.$t("layout.selectAll")
+                  $t("layout.selectAll")
                 }}</q-item-section>
               </q-item>
             </q-list>
@@ -90,12 +90,12 @@
         </div>
 
         <div class="q-ml-md cursor-pointer non-selectable header-item">
-          {{ this.$t("layout.view") }}
+          {{ $t("layout.view") }}
           <q-menu auto-close :transition-duration="0" no-focus no-refocus>
             <q-list dense style="min-width: 100px">
               <q-item clickable>
-                <q-item-section @click="emit('sidePanel')">{{
-                  this.$t("layout.connection")
+                <q-item-section @click="store.toggleSidePanel()">{{
+                  $t("layout.connection")
                 }}</q-item-section>
               </q-item>
             </q-list>
@@ -112,12 +112,17 @@
 
 <script>
 import { defineComponent, ref } from "vue";
+import { useStore } from "stores/main";
+import Settings from "components/settings-dialog";
 
 export default defineComponent({
   name: "MainLayout",
   setup() {
+    const store = useStore();
+
     return {
       file: ref(),
+      store,
     };
   },
   methods: {
@@ -146,6 +151,11 @@ export default defineComponent({
     },
     saveFile() {
       this.emitter.emit("saveFile");
+    },
+    openSettings() {
+      this.$q.dialog({
+        component: Settings,
+      });
     },
   },
 });
