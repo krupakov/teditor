@@ -12,23 +12,13 @@
           left-label
         />
       </q-card-section>
-      <q-card-section class="q-pt-none">
-        {{ $t("settings.theme") }}&nbsp;&nbsp;
-        <select class="theme-select" v-model="editorTheme">
-          <option>Dracula</option>
-          <option>Eclipse</option>
-          <option>Idea</option>
-          <option>Lucario</option>
-          <option>Mbo</option>
-          <option>Material</option>
-          <option>Monokai</option>
-          <option>Moxer</option>
-          <option>Neat</option>
-          <option>Nord</option>
-          <option>Oceanic-next</option>
-          <option>Paraiso-light</option>
-          <option>Yonce</option>
-        </select>
+      <q-card-section class="q-pt-none flex items-center">
+        {{ $t("settings.theme") }}&nbsp;&nbsp;&nbsp;
+        <v-select
+          :clearable="false"
+          :options="themeOptions"
+          v-model="editorTheme"
+        ></v-select>
       </q-card-section>
     </q-card>
   </q-dialog>
@@ -38,10 +28,13 @@
 import { ref } from "vue";
 import { useStore } from "stores/main";
 import { useQuasar, useDialogPluginComponent } from "quasar";
-import { store } from "quasar/wrappers";
+import vSelect from "vue-select";
 
 export default {
   emits: [...useDialogPluginComponent.emits],
+  components: {
+    vSelect,
+  },
   setup() {
     const $q = useQuasar();
     const store = useStore();
@@ -51,6 +44,21 @@ export default {
     return {
       dark: ref($q.dark.isActive),
       editorTheme: ref(store.editorTheme),
+      themeOptions: [
+        "Dracula",
+        "Eclipse",
+        "Idea",
+        "Lucario",
+        "Mbo",
+        "Material",
+        "Monokai",
+        "Moxer",
+        "Neat",
+        "Nord",
+        "Oceanic-next",
+        "Paraiso-light",
+        "Yonce",
+      ],
       dialogRef,
       onDialogHide,
       onDialogOK,

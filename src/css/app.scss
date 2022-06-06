@@ -2,7 +2,7 @@
 /* Firefox */
 * {
   scrollbar-width: auto;
-  scrollbar-color: #333333 #1d1d1d;
+  scrollbar-color: var(--q-primary) var(--q-secondary);
 }
 
 /* Chrome, Edge, and Safari */
@@ -11,11 +11,11 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: #1d1d1d;
+  background: var(--q-secondary);
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #333333;
+  background-color: var(--q-primary);
   border: none;
 }
 
@@ -59,6 +59,22 @@ header {
 
   &:hover {
     background: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.header-select {
+  display: inline-flex;
+  justify-content: flex-end;
+  flex-grow: 1;
+  margin-left: auto;
+  margin-right: 10px;
+
+  .v-select {
+    max-width: 150px;
+  }
+
+  .vs__dropdown-toggle {
+    height: 32px;
   }
 }
 
@@ -303,10 +319,21 @@ li.CodeMirror-hint-active {
   color: white;
 }
 
-.theme-select {
-  height: 24px;
-  color: var(--q-color);
-  background-color: var(--q-secondary);
-  outline: none;
-  border: none;
+.q-dialog-plugin {
+  overflow: visible !important;
+}
+
+.v-select {
+  display: inline-block;
+  width: 50%;
+
+  ul {
+    max-height: 40vh;
+    min-width: 100% !important;
+  }
+}
+
+.vs__dropdown-toggle {
+  cursor: pointer !important;
+  background: var(--vs-dropdown-bg) !important;
 }

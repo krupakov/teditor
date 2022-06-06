@@ -13,15 +13,35 @@ $info: #31ccec;
 $warning: #f2c037;
 
 :root {
-  --q-tetriary: #d5d3cc;
-  --q-color: #000;
-  --q-search-border: 1px solid var(--q-tetriary);
-}
+  .body--light {
+    --q-tetriary: #d5d3cc;
+    --q-color: #000;
+    --q-search-border: 1px solid var(--q-tetriary);
 
-.body--dark {
-  --q-primary: #333333;
-  --q-secondary: #444444;
-  --q-tetriary: #656565;
-  --q-color: #fff; //c1c1c1
-  --q-search-border: 1px solid var(--q-primary);
+    /** vue-select */
+    --vs-controls-color: var(--q-color);
+    --vs-border-color: var(--q-tetriary);
+
+    --vs-dropdown-bg: var(--q-secondary);
+    --vs-dropdown-color: var(--q-color);
+
+    --vs-selected-color: var(--q-color);
+  }
+
+  .body--dark {
+    --q-primary: #333333;
+    --q-secondary: #444444;
+    --q-tetriary: #656565;
+    --q-color: #fff; //c1c1c1
+    --q-search-border: 1px solid var(--q-primary);
+
+    /** vue-select */
+    --vs-controls-color: var(--q-color);
+    --vs-border-color: var(--q-tetriary);
+
+    --vs-dropdown-bg: var(--q-secondary);
+    --vs-dropdown-color: var(--q-color);
+
+    --vs-selected-color: var(--q-color);
+  }
 }

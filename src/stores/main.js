@@ -5,11 +5,13 @@ export const useStore = defineStore("main", {
     return {
       panel: true,
       theme: "Neat",
+      mode: "JavaScript",
     };
   },
   getters: {
     sidePanel: (state) => state.panel,
     editorTheme: (state) => state.theme,
+    editorMode: (state) => state.mode,
   },
   actions: {
     toggleSidePanel() {
@@ -17,6 +19,9 @@ export const useStore = defineStore("main", {
     },
     setEditorTheme(theme) {
       this.theme = theme;
+    },
+    setEditorMode(mode) {
+      this.mode = mode;
     },
   },
 });

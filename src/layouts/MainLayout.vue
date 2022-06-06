@@ -101,6 +101,14 @@
             </q-list>
           </q-menu>
         </div>
+
+        <div class="header-select">
+          <v-select
+            :clearable="false"
+            :options="modeOptions"
+            v-model="editorMode"
+          ></v-select>
+        </div>
       </div>
     </q-header>
 
@@ -114,16 +122,45 @@
 import { defineComponent, ref } from "vue";
 import { useStore } from "stores/main";
 import Settings from "components/settings-dialog";
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
 
 export default defineComponent({
   name: "MainLayout",
+  components: {
+    vSelect,
+  },
   setup() {
     const store = useStore();
 
+    const mode = localStorage.getItem("mode");
+    if (mode) {
+      store.setEditorMode(mode);
+    }
+
     return {
       file: ref(),
+      editorMode: ref(store.editorMode),
+      modeOptions: [
+        "C++",
+        "C#",
+        "Go",
+        "Java",
+        "JavaScript",
+        "PHP",
+        "Python",
+        "Ruby",
+        "Rust",
+        "Swift",
+      ],
       store,
     };
+  },
+  watch: {
+    editorMode: function () {
+      this.store.setEditorMode(this.editorMode);
+      localStorage.setItem("mode", this.editorMode);
+    },
   },
   methods: {
     execCommand(command) {

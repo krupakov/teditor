@@ -27,8 +27,14 @@ import "codemirror/theme/paraiso-light.css";
 import "codemirror/theme/yonce.css";
 
 /** Language modes */
-import "codemirror/mode/javascript/javascript.js";
 import "codemirror/mode/clike/clike.js";
+import "codemirror/mode/go/go.js";
+import "codemirror/mode/javascript/javascript.js";
+import "codemirror/mode/php/php.js";
+import "codemirror/mode/python/python.js";
+import "codemirror/mode/ruby/ruby.js";
+import "codemirror/mode/rust/rust.js";
+import "codemirror/mode/swift/swift.js";
 
 /** Code folding */
 import "codemirror/addon/fold/foldgutter.css";
@@ -71,6 +77,9 @@ export default defineComponent({
     theme() {
       return this.store.editorTheme;
     },
+    mode() {
+      return this.store.editorMode;
+    },
   },
   watch: {
     /** Watch window resize (to calculate editors height) */
@@ -83,12 +92,37 @@ export default defineComponent({
     theme: function () {
       this.cm.setOption("theme", this.store.editorTheme.toLowerCase());
     },
+    mode: function () {
+      this.cm.setOption("mode", this.cmMode(this.store.editorMode));
+    },
   },
   methods: {
     /** Codemirror command caller */
     execCommand(command) {
       this.cm.execCommand(command);
       this.cm.focus();
+    },
+    /** Translate lang name to Codemirror mode value */
+    cmMode(mode) {
+      switch (mode) {
+        case "C++":
+          return "text/x-c++src";
+        case "C#":
+          return "text/x-csharp";
+        case "JavaScript":
+          return "text/javascript";
+        case "Rust":
+          return "text/x-rustsrc";
+        case "Go":
+        case "Java":
+        case "PHP":
+        case "Python":
+        case "Ruby":
+        case "Swift":
+          return "text/x-" + mode.toLowerCase();
+        default:
+          return "text/javascript";
+      }
     },
     updateValue(value) {
       const view = this.cm.getScrollInfo();
