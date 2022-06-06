@@ -323,17 +323,6 @@ export default defineComponent({
         });
       }
     });
-
-    /** Sometimes DataConnection.on('close') event just doesn't trigger
-     *  This is just a workaround to clean up the editor from dead peers
-     */
-    setInterval(() => {
-      Object.keys(this.connectedPeers).forEach((i) => {
-        if (!this.connectedPeers[i].open) {
-          this.onConnectionClose(i);
-        }
-      });
-    }, 5000);
   },
   methods: {
     updateTabStyles() {
