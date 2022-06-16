@@ -151,8 +151,8 @@ module.exports = configure(function (ctx) {
         description: `Teditor is an app for collaborative text editing`,
         display: "standalone",
         orientation: "portrait",
-        background_color: "#1d1d1d",
-        theme_color: "#ed7112",
+        background_color: "#f3f2f1",
+        theme_color: "#00a791",
         icons: [
           {
             src: "icons/icon-128x128.png",
