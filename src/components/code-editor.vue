@@ -197,7 +197,7 @@ export default defineComponent({
     /** Init Codemirror instance */
     this.cm = CodeMirror.fromTextArea(this.$refs.editor, {
       theme: this.store.editorTheme.toLowerCase() || "neat",
-      mode: "text/javascript", // text/x-java text/javascript text/x-c++src text/x-csharp
+      mode: this.cmMode(this.store.editorMode),
       lineNumbers: true,
       lineWrapping: true,
       styleActiveLine: true,
