@@ -179,7 +179,8 @@ export default defineComponent({
       return { title: appTitle.value };
     });
 
-    this.connectUrl = window.location.host + "/?connect=";
+    this.connectUrl =
+      window.location.origin + window.location.pathname + "?connect=";
 
     /** Event bus handlers */
     this.emitter.on("newTab", (data) => {
