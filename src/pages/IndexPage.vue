@@ -41,8 +41,11 @@
             }"
             type="text"
             autocomplete="off"
-            :value="document.name"
-            disabled
+            v-model="document.name"
+            readonly="true"
+            ondblclick="this.readOnly=''"
+            onblur="this.readOnly='true'"
+            @blur="updateDocName(key)"
           />
           <div
             :style="{
@@ -458,6 +461,19 @@ export default defineComponent({
         this.currentTab = key;
       }
       this.emitter.emit("refresh" + key);
+    },
+    updateDocName(key) {
+      /** Make change */
+      this.automerge = Automerge.change(this.automerge, "changes", (docs) => {
+        docs[key].name = this.documents[key].name;
+      });
+
+      /** Broadcast change */
+      let change = Automerge.getLastLocalChange(this.automerge);
+      this.broadcast({
+        type: "input",
+        changes: [change.toString()],
+      });
     },
     /** Make changes to Automerge */
     handleChanges(data) {

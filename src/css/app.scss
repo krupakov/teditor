@@ -115,16 +115,10 @@ header {
     color: var(--q-color);
     padding: 10px 8px 6px 8px;
 
-    &:disabled {
+    &:read-only {
       cursor: pointer !important;
       width: calc(100% - 20px) !important;
       opacity: 1 !important;
-    }
-
-    &:focus {
-      -webkit-box-shadow: inset 0px 0px 0px 1px var(--q-accent);
-      -moz-box-shadow: inset 0px 0px 0px 1px var(--q-accent);
-      box-shadow: inset 0px 0px 0px 1px var(--q-accent);
     }
   }
 
@@ -132,7 +126,7 @@ header {
     display: inline-flex;
   }
 
-  &:hover input:not(:disabled) + .tab-close {
+  &:hover input:not(:read-only) + .tab-close {
     display: none !important;
   }
 }
