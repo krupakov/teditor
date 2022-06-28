@@ -1,6 +1,9 @@
-# Teditor (teditor)
+# Teditor
 
 Teditor is an app for collaborative text editing
+
+
+[Live Demo](https://krupakov.github.io/teditor/)
 
 ## Install the dependencies
 ```bash
